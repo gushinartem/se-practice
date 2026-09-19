@@ -19,5 +19,5 @@ def analyze_marks(marks, pass_mark=50):
 
 
 # Example
-print(analyze_marks([45, 60, 75, 90, 30]))
+print(analyze_marks([-1,50,101], 50))
 # {'average': 60.0, 'highest': 90, 'lowest': 30, 'pass_rate': 60.0}
