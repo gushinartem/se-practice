@@ -1,8 +1,8 @@
 # Lab report — Practice #02: The Prompt Is an Engineering Input
 
-**Name:**
-**Group:**
-**Date:**
+**Name: Artem Guchshin**
+**Group: Monday 16:00-19:00**
+**Date: 19.09.2026**
 
 > Fill in every section. **Do not delete or renumber the headings** — the grading pass reads them
 > by number. If something did not happen, write "did not happen" and why; an empty section and a
@@ -14,23 +14,23 @@
 
 | | |
 | --- | --- |
-| AI assistant | |
-| Exact model name | |
-| Implementation language | |
-| Date of the runs | |
+| AI assistant | Claude |
+| Exact model name | Sonnet 5 medium |
+| Implementation language | Python |
+| Date of the runs | 19.09.2026 |
 
 **Non-Python students only** — paste your substituted Prompt B text here, so the substitution can
 be checked:
 
 ```
-(paste here, or write "n/a — used Python")
+n/a
 ```
 
 **Confirmations:**
 
-- Each prompt was sent in a **fresh chat**: yes / no
-- No follow-up questions were asked before Part 7: yes / no
-- Every output was saved **before** any editing: yes / no
+- Each prompt was sent in a **fresh chat**: yes
+- No follow-up questions were asked before Part 7: yes
+- Every output was saved **before** any editing: yes
 
 ---
 
@@ -39,25 +39,25 @@ be checked:
 **Prompt sent** (should be exactly one sentence):
 
 ```
-
+Write Pythong code to analyze student marks.
 ```
 
 **Assumptions the AI made that I never gave it** — list them, one per line. A data format, a pass
 threshold, a rounding rule, an input method, an invented feature all count.
 
-1.
-2.
-3.
+1. It uses pandas for collecting data
+2. Also it connected scv for analyzing student's data
+3. It uses charts and graphs
 
 **Questions it should have asked and did not:**
 
-1.
-2.
+1. Didn't ask about format that i would enter in this program
+2. Didn't ask about do i really need the csv support
 
-**Is the function named `analyze_marks` with the required signature?** yes / no — if no, what is it
+**Is the function named `analyze_marks` with the required signature?** yes — if no, what is it
 called:
 
-**First impression before testing** (one sentence — you will compare this with section 6 later):
+**First impression before testing** (one sentence — you will compare this with section 6 later): It is very complex and heavy script that will calculate everything 
 
 ---
 
@@ -66,18 +66,21 @@ called:
 **Prompt sent** (paste it in full, including any substitutions):
 
 ```
-
+You are a Python developer. Implement analyze_marks(marks, pass_mark=50). Return
+average, highest, lowest, and pass_rate in a dictionary. Accept marks from 0 to 100;
+raise ValueError for an empty list, non-numeric values, or out-of-range values. Use
+no external libraries. Return code plus a short explanation.
 ```
 
 **What B fixed compared to A:**
 
-1.
-2.
+1. Nothing it just suppress the origin code
+2. -
 
 **What B still leaves open:**
 
-1.
-2.
+1. A was perfect at the first prompt
+2. Nothing it already covered all tasks
 
 ---
 
