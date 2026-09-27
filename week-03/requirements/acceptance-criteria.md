@@ -11,9 +11,8 @@ three happy paths.
 These must settle the two questions the scenario leaves open. Either answer is accepted; no answer
 is not.
 
-- **Overlap:** a booking that ends exactly when another begins is TODO (allowed / not allowed) under R3, because TODO.
-- **Duration:** a booking of exactly two hours is TODO (allowed / not allowed) under R2, because TODO.
-- TODO (any further assumption you needed)
+- **Overlap:** a booking that ends exactly when another begins is allowed.
+- **Duration:** a booking of exactly two hours is allowed under R2, because i want that so.
 
 ---
 
@@ -55,7 +54,7 @@ is not.
 
 ---
 
-## US-TODO — <Cancel booking>
+## US-03 — <Cancel booking>
 
 ### AC-07
 - **Given** a student has an existing booking

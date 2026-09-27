@@ -18,8 +18,6 @@ rectangle "Smart Campus study room booking" {
   usecase "Send confirmation"      as UC06
 }
 
-' TODO: replace the associations below with the ones you can justify.
-' TODO: think about UC05 and UC06 before you connect an actor to them.
 
 Student --> UC01
 

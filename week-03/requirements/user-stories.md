@@ -3,7 +3,6 @@
 6 to 8 stories. Keep the shape exactly: ID, the As/I want/so that sentence, a priority, one
 assumption. Roles are **Student** or **Administrator** only.
 
-Delete the TODO lines as you fill them in — the checker treats a leftover TODO as unfinished work.
 
 ---
 
@@ -24,7 +23,7 @@ Delete the TODO lines as you fill them in — the checker treats a leftover TODO
 
 ### US-04
 **Story:** As a Student, I want to receive a confirmation when my booking is successful, so that I know my reservation is valid and can plan accordingly.
-**Priority:** Meidum
+**Priority:** Medium
 **Assumption:** Confirmation is sent through a single channel (e.g., in-app notification or email) immediately after the booking is accepted.
 
 ### US-05
