@@ -3,9 +3,9 @@
 Fill in every section. **Do not delete or renumber the headings** — the README points at them and a
 missing heading reads as a missing section.
 
-Name:
-Student ID:
-GitHub username:
+Name: Artem Guchshin
+Student ID: 24B031011
+GitHub username: gushinartem
 
 ---
 
@@ -13,10 +13,10 @@ GitHub username:
 
 | | |
 | --- | --- |
-| AI assistant (tool) | |
-| Exact model name and version | |
-| Date of the session | |
-| Diagram renderer used | |
+| AI assistant (tool) | Claude |
+| Exact model name and version | Sonnet 5 medium |
+| Date of the session | 27.09.2026 |
+| Diagram renderer used | vscode |
 
 One tool and one model for all three prompts. If you switched, say why here — it changes what your
 findings mean.
@@ -29,7 +29,49 @@ Paste the **unedited** response to Prompt 1. Do not tidy it. If it is long, past
 this is the baseline everything else is measured against.
 
 ```
-(paste here)
+User Stories — Smart Campus Study Room Booking
+
+1. View Room Availability
+As a Student, I want to view which study rooms are free and at what times, so that I can choose a suitable room and time slot before booking.
+
+Priority: High
+Assumption: Availability data reflects only confirmed bookings and blocked rooms, updated in real time.
+
+2. Book a Room
+As a Student, I want to reserve a free room for a specific time slot, so that I have a guaranteed space to study individually or with a group.
+
+Priority: High
+Assumption: The system automatically rejects a booking request if the start time is not in the future, the duration exceeds two hours, or the slot overlaps an existing booking for that room (R1, R2, R3).
+
+3. Cancel a Booking
+As a Student, I want to cancel a booking I made, so that I can release the room if my plans change and free the slot for others.
+
+Priority: Medium
+Assumption: A student can only cancel their own bookings, not those made by other students.
+
+4. Receive Booking Confirmation
+As a Student, I want to receive a confirmation when my booking is successful, so that I know my reservation is valid and can plan accordingly.
+
+Priority: Medium
+Assumption: Confirmation is sent through a single channel (e.g., in-app notification or email) immediately after the booking is accepted.
+
+5. Receive Cancellation Confirmation
+As a Student, I want to receive a confirmation when I cancel a booking, so that I have proof the reservation was released and the room is available to others.
+
+Priority: Low
+Assumption: Cancellation confirmations use the same delivery channel as booking confirmations.
+
+6. Block or Unblock a Room
+As an Administrator, I want to take a room out of service and later return it to service, so that rooms needing maintenance or repair are not booked by students.
+
+Priority: High
+Assumption: A blocked room cannot accept new bookings while blocked, and existing future bookings on a room being blocked require an administrator decision outside this story's scope (system enforces R4 going forward).
+
+7. Review Room Usage
+As an Administrator, I want to see how rooms are being used over a chosen period, so that I can identify demand patterns and inform decisions about room availability.
+
+Priority: Medium
+Assumption: Usage data is drawn from completed and cancelled bookings within the selected date range only.
 ```
 
 ---
@@ -39,13 +81,12 @@ this is the baseline everything else is measured against.
 One row per change you made. "Kept unchanged" is a valid row and needs a reason too.
 
 | Story (as generated) | What I did | Why | Final ID |
-| --- | --- | --- | --- |
+| Kept unchanged because all user stories were perfect with ideal business rules |  | --- | --- |
 | | | | |
 
-**Did the assistant invent anything outside the scenario?** Name it against the out-of-scope list in
-README section 1, or write "no, and here is how I checked".
+**Did the assistant invent anything outside the scenario?** No , it didn't 
 
-**How many stories did you end with, and why that number?**
+**How many stories did you end with, and why that number?** 7 , that's the number of stories that ai generated
 
 ---
 
