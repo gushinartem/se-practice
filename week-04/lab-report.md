@@ -225,8 +225,4 @@ A FAIL you report and explain in lab-report.md §9 costs you nothing. One you hi
 
 ## 10. Conclusion (120–180 words)
 
-<Which diagram did the AI get most wrong, and what exactly was wrong? Which error would have
-reached the code if nobody had reviewed it? What did the critique find that you missed — and what
-did it claim that was false? Be specific: "the AI got the multiplicities wrong" is worth nothing;
-"the AI put 1..* on the Booking end, which says every room must already have a booking" is worth
-everything.>
+The class diagram was the AI's weakest. Student carried reserveRoom() and cancelBooking(), which turned a domain concept into a service and duplicated Booking.cancel(). It also added a COMPLETED status that no rule or story needs. If unreviewed, that logic would have been coded on the wrong class, and the extra state would have needed handling nobody specified. The use case diagram's `<<include>>` on Receive Booking Confirmation was also wrong: confirmation happens only on success (R4), not always. The activity diagram was nearly right, but the touching-bookings case under R2 was never declared. [Add: what the critique found that you missed, and one claim of it that was false.]
