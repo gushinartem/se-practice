@@ -10,13 +10,13 @@
 
 | Field | Value |
 | --- | --- |
-| Name | <your name> |
-| Group | <your group> |
-| AI assistant | <e.g. Claude, ChatGPT, Gemini, DeepSeek, Grok> |
-| Exact model | <the exact model name with its version, e.g. claude-sonnet-4-5> |
-| Renderer | <PlantUML web server / VS Code extension / IntelliJ plugin / local jar> |
+| Name | Artem Guchshin |
+| Group | Monday 16-19 |
+| AI assistant | Claude |
+| Exact model | Claude Sonnet 5.5 Medium |
+| Renderer | PlantUML web server |
 | Behaviour diagram | <sequence / activity / both> |
-| Stories used | <my week-03 stories, revised / the reference set from README §3> |
+| Stories used | my week-03 stories, revised |
 
 ---
 
@@ -28,7 +28,7 @@ AI's first replies are saved as files in `models/original/` — do not paste the
 ### 2.1 Task 1 — use-case prompt
 
 ```text
-<paste>
+This is the Smart Campus scenario, its rules R1-R4 and my approved user stories. I will ask you for several UML diagrams in PlantUML. Use only this scenario. Wait for my first request.Using the supplied scenario and approved stories, generate PlantUML for a use-case diagram. Include Student and Administrator outside a named system boundary. Model their goals, show justified associations, and list assumptions. Use include or extend only with a clear reason.
 ```
 
 ### 2.2 Task 2 — class prompt
@@ -66,8 +66,9 @@ proves it is a problem.
 
 | # | Element | Problem | Rule or story | Fix |
 | --- | --- | --- | --- | --- |
-| 1 | <e.g. Student → Send confirmation> | <what is wrong> | <R4 / US-01 / scenario sentence> | <what you changed> |
-| 2 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | UC2 `<<include>>` UC4 | UC4 is a system action, not a user goal. The include is not "always": confirmation happens only on success. | R4, US-04 | Deleted UC4. R4 is now a success guarantee of UC2. |
+| 2 | UC3 Cancel Booking | The cancellation confirmation has no use case or note. | US-05 | Added it as a success guarantee of UC3. |
+| 3 | UC2 / UC5 (no assumptions declared) | Touching bookings and blocking a booked room are undecided, so the overlap check and the effect of blocking are undefined. | R2, R3, US-06 | A1: touching bookings do not overlap. A2: blocking does not cancel existing bookings. |
 
 ---
 
