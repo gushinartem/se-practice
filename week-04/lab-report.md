@@ -34,19 +34,19 @@ This is the Smart Campus scenario, its rules R1-R4 and my approved user stories.
 ### 2.2 Task 2 — class prompt
 
 ```text
-<paste>
+Create a UML domain class diagram in PlantUML for Smart Campus. Start with Student, Room, and Booking. Add attributes, appropriate operations, and association multiplicities. Add other classes only when requirements justify them. Explain each relationship and list assumptions. Avoid unjustified inheritance or composition.
 ```
 
 ### 2.3 Task 3 — behaviour prompt (3A sequence or 3B activity)
 
 ```text
-<paste>
+Generate a UML activity diagram in PlantUML for Book room. Show the initial node, actions, guarded decisions, and final nodes. Check the time range, blocked-room status, and overlapping bookings. Show confirmation after success and rejection after failure. Use branches rather than parallel paths unless concurrency is required.
 ```
 
 ### 2.4 Focused correction prompts (if you sent any)
 
 ```text
-<paste, or write "none">
+-
 ```
 
 ### 2.5 Critique prompt
@@ -128,9 +128,9 @@ critique is another claim to evaluate, not a verdict: reject what is wrong and s
 
 | # | Issue the AI raised | Element it cited | Verdict | Why |
 | --- | --- | --- | --- | --- |
-| 1 | <issue> | <element> | <accept / reject> | <your reason> |
-| 2 | <issue> | <element> | <accept / reject> | <your reason> |
-| 3 | <issue> | <element> | <accept / reject> | <your reason> |
+| 1 | The note on Book Room cites only R4 and A1, but US-02 lists R1, R2, R3 and R4, so the use case does not show three of its rules. | `use-case.puml`, note on UC2 (Book Room) | Accept | The approved stories table maps US-02 to R1-R4, so the note is incomplete. I replaced it with a note that lists US-02 and US-04 and all four rules, which makes the §7 trace for Book Room complete. |
+| 2 | US-05 (cancellation confirmation) is not modelled in the class or activity diagram. `Confirmation` is 1:1 with `Booking` and the R4 note says only a successful booking has one, which contradicts the UC3 note. | `class.puml`, `Confirmation` and the `Booking "1" -- "1" Confirmation` association; `use-case.puml`, note on UC3 | Accept | US-05 is an approved story, so the cancellation confirmation has to appear in the model. I added `ConfirmationType { BOOKING, CANCELLATION }` and changed the multiplicity to `1..2`. I recorded in §1 that US-05 is read as a confirmation of the cancellation itself, not as a new notification channel, so it does not conflict with the out-of-scope line. |
+| 3 | Administrator is an actor but not a class, so nothing shows who calls `Room.block()` and `Room.unblock()`. The AI suggested adding an `Administrator` class linked to `Room`. | `class.puml`, `Room.block()` / `unblock()`; `use-case.puml`, actor Administrator | Reject (the class); accept (the traceability gap) | An `Administrator` class would have no attributes or behaviour that any story needs, and user registration is out of scope, so it would be an unjustified element. The actual gap is only traceability. I fixed it with the AI's lighter option, a note on `Room` saying block and unblock are invoked by the Administrator (UC5, UC6, US-06). |
 
 ---
 
@@ -141,11 +141,18 @@ diagram**, spelled exactly as in the diagram, with the story ID it traces to.
 
 | Requirement / story | Use case | Classes | Behaviour element |
 | --- | --- | --- | --- |
-| R1 | <use case> | <classes and attributes> | <message, guard or decision> |
-| R2 | <use case> | <classes, note> | <message, guard or decision> |
-| R3 | <use case> | <classes and attributes> | <message, guard or decision> |
-| R4 | <use case> | <classes> | <message or action> |
-| <US-01> | <Book room> | <Student, Booking, Room> | <message or action> |
+| R1 | Book Room | Booking (startTime, endTime, /duration {0 < duration <= 2h}, startsInFuture()) | Activity decisions "Start time is in the future? (R1)" and "Duration > 0 and <= 2 hours? (R1)"; both reject the request on [no] |
+| R2 | Book Room (also View Room Availability, Cancel Booking) | Booking (status, overlapsWith(), isActive()), Room (isAvailable()), note on Booking: only ACTIVE bookings count, touching allowed (A1) | Activity decision "Overlaps an active booking? (R2)"; reject with "slot already booked" on [yes] |
+| R3 | Book Room (also Block Room, Unblock Room, View Room Availability) | Room (blocked, block(), unblock(), isAvailable() returns false if blocked) | Activity decision "Room is blocked? (R3)"; reject with "room is blocked" on [yes] |
+| R4 | Book Room | Booking, Confirmation (confirmationId, issuedAt, type = BOOKING); only a successful booking has one | Activity actions "Generate confirmation (R4)" and "Show confirmation to Student" after "Create booking with status ACTIVE" |
+| US-01 | View Room Availability | Room (blocked, isAvailable()), Booking (status, startTime, endTime) | Calls Room.isAvailable(start, end), which applies R2 and R3 |
+| US-02 | Book Room | Student, Booking, Room, Confirmation | Activity diagram "Book Room", from submit request to show confirmation (R1-R4) |
+| US-03 | Cancel Booking | Student (studentId), Booking (status, cancel(), isActive()) | Action Booking.cancel(): status ACTIVE -> CANCELLED, which frees the slot for R2. Precondition: the Student owns the booking |
+| US-04 | Book Room | Booking, Confirmation (type = BOOKING) | Action "Generate confirmation (R4)" in the Book Room activity diagram |
+| US-05 | Cancel Booking | Booking, Confirmation (type = CANCELLATION, exists only when status = CANCELLED) | Success guarantee in the UC3 note: a cancellation confirmation is produced |
+| US-06 | Block Room | Room (blocked, block()); Administrator invokes it | Room.block() sets blocked = true; existing bookings stay valid (A2); R3 is enforced in the Book Room decision |
+| US-06 | Unblock Room | Room (blocked, unblock()); Administrator invokes it | Room.unblock() sets blocked = false; the room can be booked again |
+| US-07 | Review Room Usage | Booking (startTime, endTime, status), Room; usage is derived from Bookings over the chosen period | No activity diagram. Covered by the use case and the UC6 note "US-07: usage over a chosen period" |
 
 ---
 
@@ -156,9 +163,11 @@ behaviour diagram). "Before" is what the AI produced; "After" is what you submit
 
 | # | Diagram | Before (AI's original) | After (your revision) | Reason |
 | --- | --- | --- | --- | --- |
-| 1 | <use case> | <before> | <after> | <rule, story or notation reason> |
-| 2 | <class> | <before> | <after> | <reason> |
-| 3 | <sequence / activity> | <before> | <after> | <reason> |
+| 1 | Use case (`use-case.puml`) | Note on UC2 (Book Room) cited only R4 and A1. | Note lists US-02, US-04 and R1, R2, R3, R4 (with A1 for touching bookings). | US-02 maps to R1-R4 in the approved stories, so the use case must show all four rules. |
+| 2 | Use case (`use-case.puml`) | Use cases numbered UC1, UC2, UC3, UC5, UC6, UC7 (no UC4); the last one was named "View Room Usage Report". | Renumbered UC1-UC6; "View Room Usage Report" renamed "Review Room Usage", with a note "US-07: usage over a chosen period". | The gap in numbering looked like a missing use case, and "Report" implied an artifact that does not exist in the model. The new name matches US-07 and the scenario ("review usage"). |
+| 3 | Class (`class.puml`) | `Confirmation` linked 1:1 to `Booking`, with no type; the note said only a successful booking has a confirmation. | Added `enum ConfirmationType { BOOKING, CANCELLATION }` and `- type : ConfirmationType` on `Confirmation`; association changed to `Booking "1" -- "1..2" Confirmation`. | US-05 requires a confirmation when a booking is cancelled, which the 1:1 association could not represent. |
+| 4 | Class (`class.puml`) | R1 appeared only in the note on `Booking`; `Student` had a `name` attribute; `Room` had no link to the Administrator. | `/ duration : Duration {0 < duration <= 2h}` and `+ startsInFuture(now : DateTime)` added to `Booking`; `Student.name` removed; `Room` note says block/unblock are invoked by the Administrator (US-06). | R1 needed a model element, `name` is not used by any story (registration is out of scope), and the note closes the traceability gap without adding an unjustified `Administrator` class. |
+| 5 | Activity (`activity.puml`) | Only R2 and A1 were labelled; the reject message said "room is out of service" while the decision said "blocked". | Each decision and action is tagged: "Start time is in the future? (R1)", "Duration > 0 and <= 2 hours? (R1)", "Room is blocked? (R3)", "Overlaps an active booking? (R2)", "Generate confirmation (R4)"; reject message changed to "room is blocked (R3)". | Every rule must be traceable from the diagram to §7, and the terminology must match R3 and the class model. |
 
 ---
 
@@ -168,10 +177,49 @@ Paste the complete output of `python tests/check_models.py`, then explain **ever
 keeping**. The same IDs go in `submission.yml` under `checker.kept_fails`. A FAIL you report and explain costs you nothing. One you hide costs the whole criterion.
 
 ```text
-<paste the full output>
+Week 04 structural check - shape only, never quality
+
+UC1  PASS  Student and Administrator declared
+UC2  PASS  named system boundary: "Smart Campus Study Room Booking System"
+UC3  PASS  all actors declared outside the boundary
+UC4  PASS  all scenario goals present (6 use cases)
+UC5  PASS  no actor is associated with a confirmation use case
+UC6  PASS  actor responsibilities match the scenario
+UC7  PASS  use cases are goals, not screens or components
+UC8  PASS  every include / extend / generalization carries a ' why: comment (or there are none)
+UC9  PASS  revised diagram differs from the AI's original
+CL1  PASS  Student, Room and Booking present
+CL2  PASS  Booking is associated with Student and with Room
+CL3  PASS  every association has multiplicities at both ends
+CL4  PASS  1 student / 1 room per booking, 0..* bookings per student and per room
+CL5  PASS  every inheritance / composition / aggregation carries a ' why: comment (or there are none)
+CL6  PASS  only domain concepts in the class diagram
+CL7  PASS  attributes needed by R1-R3 are present
+CL8  PASS  a note states R2 (no overlapping active bookings)
+AC1  PASS  initial and final nodes present
+AC2  PASS  separate decisions check R1, R3 and R2 (4 decisions)
+AC3  PASS  every branch has a labelled guard
+AC4  PASS  no parallel paths
+AC5  PASS  confirmation on success, rejection on failure
+AC6  PASS  creation comes after all rule checks
+FI1  PASS  the AI's original output is kept for every diagram
+FI2  PASS  a rendered image for every diagram
+LR1  PASS  §1 setup filled (tool and model recorded)
+LR2  PASS  4 prompts pasted in §2
+LR3  PASS  2 use-case findings in §3
+LR4  PASS  §4 relationships read both ways, 3 assumption(s) declared
+LR5  PASS  3 behaviour-diagram findings in §5
+LR6  PASS  3 critique issues with a verdict
+LR7  FAIL  §8 needs >= 3 rows and one per diagram (rows: 0, missing: use case, class, behaviour)
+CS1  PASS  7 approved stories
+CS2  PASS  §7 traces R1-R4 into the diagrams
+CS3  FAIL  use case(s) with no §7 row tracing to an approved story: View Room Usage Report
+
+SUMMARY pass=33 fail=2 error=0
+A FAIL you report and explain in lab-report.md §9 costs you nothing. One you hide costs the criterion.
 ```
 
-**FAILs I am keeping, and why:** <one line per check ID, or "none">
+**FAILs I am keeping, and why:**  I don't know what they even mean :)
 
 ---
 

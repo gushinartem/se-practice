@@ -5,22 +5,21 @@ responsible for the accuracy of everything you submit, including every diagram a
 
 | Tool | Exact model | Used for | Which files it touched |
 | --- | --- | --- | --- |
-| <assistant> | <exact model with its version> | Task 1 — use-case draft | `models/original/use-case.puml` |
-| <assistant> | <model> | Task 2 — class draft | `models/original/class.puml` |
-| <assistant> | <model> | Task 3A or 3B — behaviour draft | `models/original/<sequence or activity>.puml` |
-| <assistant> | <model> | Critique of the revised diagrams | `lab-report.md` §6 |
-| | | | |
+| Claude | Claude Sonnet 5.5 (medium) | Task 1: use-case draft | `models/original/use-case.puml` |
+| Claude | Claude Sonnet 5.5 (medium) | Task 2: class draft | `models/original/class.puml` |
+| Claude | Claude Sonnet 5.5 (medium) | Task 3B: behaviour draft (activity diagram) | `models/original/activity.puml` |
+| Claude | Claude Sonnet 5.5 (medium) | Critique of the revised diagrams | `lab-report.md` §6 |
 
-**The files in `models/original/` are the AI's first replies, unedited:** yes / no
+**The files in `models/original/` are the AI's first replies, unedited:** yes
 <!-- If "no", say what you changed before saving. An honest "no" costs far less than a quiet edit. -->
 
-**The revised diagrams in `models/` were corrected by me, and I can explain every element:** yes / no
+**The revised diagrams in `models/` were corrected by me, and I can explain every element:** yes
 
-**Did an AI write any part of `lab-report.md` other than the critique it produced?** yes / no
+**Did an AI write any part of `lab-report.md` other than the critique it produced?** no
 <!-- If yes: which section, and what you changed afterwards. -->
 
-**Anything I accepted from the AI without fully understanding it:**
+**Anything I accepted from the AI without fully understanding it:** no
 <!-- Name the file and the element. -->
 
-Signed: <your name>
-Date:
+Signed: Artem Guchshin
+Date: 04.10.26
