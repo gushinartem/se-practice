@@ -15,7 +15,7 @@
 | AI assistant | Claude |
 | Exact model | Claude Sonnet 5.5 Medium |
 | Renderer | PlantUML web server |
-| Behaviour diagram | <sequence / activity / both> |
+| Behaviour diagram | activity |
 | Stories used | my week-03 stories, revised |
 
 ---
@@ -115,7 +115,9 @@ what it does in one line; write "none" for an activity diagram>
 
 | # | Element | Problem | Rule or story | Fix |
 | --- | --- | --- | --- | --- |
-| 1 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | Decision "Slot overlaps an active booking for this room?" | The touching case (10:00-12:00 vs 12:00-13:00) is not stated, so the check is undefined for back-to-back bookings. | R2, A1 | Added a note on the decision: "overlap is strict, touching bookings are allowed (A1)". |
+| 2 | Two decisions for R1 (future start, then duration) | The review expects one decision per rule, and R1 has two. A single combined diamond would hide which part failed, so the split is kept. | R1, US-02 | Kept both diamonds. Declared that they are two conditions of the same rule, so the student gets a specific reason for each. |
+| 3 | Overlap check wording "active booking" | Without a stated meaning, cancelled bookings could be read as blocking a slot. | R2, US-03 | Added to the note: "only ACTIVE bookings count, CANCELLED ones are ignored". |
 
 ---
 
