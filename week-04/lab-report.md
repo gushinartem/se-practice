@@ -80,24 +80,29 @@ One row per association in your **revised** class diagram.
 
 | Association | Read left → right | Read right → left | Multiplicities |
 | --- | --- | --- | --- |
-| <Student — Booking> | <one student makes 0..* bookings> | <each booking belongs to exactly 1 student> | <1 / 0..*> |
-| <Room — Booking> | <...> | <...> | <...> |
+| Student — Booking | One student makes 0..* bookings. | Each booking belongs to exactly 1 student. | 1 / 0..* |
+| Room — Booking | One room is reserved by 0..* bookings. | Each booking is for exactly 1 room. | 1 / 0..* |
+| Booking — Confirmation | One booking produces exactly 1 confirmation. | Each confirmation belongs to exactly 1 booking. | 1 / 1 |
 
 ### 4.2 Constraints the multiplicities cannot show
 
-- R2: <how your diagram states it — which note, on which class>
-- <any other rule that is not visible in multiplicities>
+- R2: a note on Booking says active bookings of the same room must not overlap (touching is allowed, A1).
+- R1: a note on Booking says the start must be in the future and 0 < duration <= 2h (exactly 2h is allowed).
+- R3: a note on Room says a blocked room accepts no new booking (the `blocked` flag holds the state).
+- R4: a note on Booking says only a successful booking has a Confirmation.
 
 ### 4.3 Assumptions
 
-- A1: <an assumption you had to make — e.g. what happens to existing bookings when a room is blocked>
-- <A2 ...>
+- A1: touching bookings (10:00-12:00 and 12:00-13:00) do not overlap, so back-to-back bookings are allowed.
+- A2: blocking a room does not cancel its existing bookings. R3 stops only new ones.
+- A3: a Booking exists only after a successful booking, so "1 Booking : 1 Confirmation" holds.
 
 ### 4.4 Findings
 
-| # | Element | Problem | Rule or story | Fix |
-| --- | --- | --- | --- | --- |
-| 1 | <element> | <problem> | <rule or story> | <fix> |
+| 1 | Booking (no notes) | R1, R2 and R4 are not shown, and R2 cannot be drawn with multiplicities. | R1, R2, R4 | Added notes on Booking (R1, R2, R4) and on Room (R3). |
+| 2 | `BookingStatus.COMPLETED` | No rule or story needs it. A finished booking is known from `endTime`. | R2, US-03 | Removed it. The enum is now ACTIVE and CANCELLED. |
+| 3 | `Student.reserveRoom()` and `cancelBooking()` | They are actions, and they duplicate `Booking.cancel()`. Student is a domain concept, not a service. | US-02, US-03 | Removed both methods. |
+| 4 | `overlapsWith` (touching case undeclared) | The result for back-to-back bookings is undefined. | R2 | Declared A1. |
 
 ---
 
