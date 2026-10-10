@@ -22,22 +22,30 @@
 
 **Question:** Does faster AI code generation reduce the total lifetime cost of a small club registration app, and which enginneering methods keep the cost low?
 
-**Users:** Club members and 2-3 organizers.
+**Users:** Club members and two or three organizers of this club.
 
-**Problem:** Registration is done in chats and spreadsheets,so people get lost.
+**Problem:** Registration is done in chats and spreadsheets,so this way by misunderstanding chats and spreadsheets people get lost.
 
-**Constraints:** No budget , organisers change every semester.
+**Constraints:** No budget , absolutely nothing , only voluteers work , organisers change every semester.
 
-**Risk:** AI-written code goes live without tests or documentation , and later nobody can fix it cheaply.
+**Risk:** AI written code goes live without tests or documentation , and later nobody can fix it cheaply, because they can't understand it .
 
-**Assumptions:** Fictional: 80 members , 2 developers , the app is used for 2+ years.
+**Assumptions:** Fictional: 80 members , 2 developers , the app is being used for 2+ years.
 
 ## 2. Analysis
 
 <!-- 350–400 words. Your answer to the question, the trade-offs, and how it applies to your
      scenario. Explain at least two engineering decisions and why they fit the scenario. -->
 
-(write here)
+Faster AI code generation does reduce the effort of writing the club registration app, but in my scenario the saving is small. AI-generated code lowers the cost of writing the app, but whether that is a small or large part of the total depends on how long the app lives and how often it changes. For a small app like this one, I cannot assume it is the smallest part.
+
+Lecture notes on Sommerville's chapter on software evolution state that maintenance costs are usually greater than development costs, and that the size of the difference depends on the application (Kurkovsky, CCSU notes). These notes are general and do not discuss AI-written code, so they cannot prove that AI lowers total cost. They only show that writing the code is not the whole cost of an app.
+
+Source evidence says maintenance costs are higher when the original developers are not available (Offutt, GMU overview). In my scenario, organizers change every semester, so I expect handovers to raise maintenance effort, but this is my inference and not a measured result for a club app.
+
+This leads to two engineering decisions. First, I would write a one-page README that explains how to run the app, where the data is stored and what is still broken. It costs little time, and it addresses the handover problem, because new organizers can start without the original developers. Second, I would not build a large automated test suite or run formal code reviews. Instead, before each handover the outgoing organizers check three actions by hand: registering, cancelling and listing attendees. With 80 members and only two volunteer developers, a full test suite could cost more effort than the few bugs it would catch in such a small app.
+
+These choices have trade-offs. The README must be kept up to date, because an outdated one can mislead new organizers, and the manual check depends on volunteers doing it. If the app grows or lives much longer than two years, skipping automated tests would become risky, and I would add tests for the core flows. AI-written code with no controls remains the main risk: it is quick to produce, but a bug after a handover could cost more to fix than the code cost to write. The savings from AI therefore appear only if the club keeps these light controls.
 
 ## 3. Review
 
@@ -45,20 +53,32 @@
      checks and your two substantive revisions, each with a reason. Point at the rows of the
      tables in section 9 ("verification row 2", "change-log row 1"). -->
 
-(write here)
+Prompt B returned 21 concerns. I treated them as claims to judge, not as evidence, and grouped them by theme. I accepted the concerns asking me to compare three alternatives (human code, AI code without controls, AI code with controls), to tie my assumptions to the argument, and to admit that the draft cited no sources. I qualified three: "smallest part of the cost" was too strong, simple and large bugs differ in cost, and "cost" needed a definition. I rejected concern 2 because i said so and concerns 7 - 11, 13 and 15 - 21 because i said so.
+
+The main claim I challenged was that writing code is the "smallest" part of lifetime cost. The CCSU lecture notes on Sommerville chapter 9 say maintenance is usually greater than development, but the difference depends on the application. For a small app I cannot assume that writing is the smallest part, which produced change log row 1. But always it is true that the maintenance is larger that everything behind it.
+
+My second check, the GMU overview of maintenance, supports the general point that maintenance costs more when the original developers are unavailable. It does not address a club app, so I labelled the handover effect as my own inference, which produced change-log row 2.
+
+Three claims remain unverified, so I do not state them as facts: AI code defect rates, the effect of tests and documentation on small projects, and whether AI shortens total development time. Neither source covers AI-written code.
 
 ## 4. Conclusion
 
 <!-- 100–150 words. Your recommendation for the scenario and its main limitation. -->
 
-(write here)
+For the club registration app, I recommend using AI to generate the code but keeping two light controls: a one-page README and a manual check of registering, cancelling and listing attendees before every organizer handover. Faster code generation lowers the cost of writing the app, but it does not remove the cost of understanding and fixing it later, and the organizers change every semester. A full automated test suite and formal code review are not worth the volunteers' time for an app this small, with only two developers. If the app grew or lived much longer, I would add automated tests. The main limitation is evidence: my two sources are general lecture notes and do not cover AI-written code or club-sized apps, so part of this recommendation rests on my own inference.
 
 ## 5. Reflection
 
 <!-- 150–200 words. NOT part of the main total. Written by you, not by the assistant:
      what helped, what you changed, what you learned. Specific beats flattering. -->
 
-(write here)
+Before this assignment, I thought that most of a software project's cost came from writing the code. However, after reviewing the lecture notes on Sommerville, Chapter 9, I learned that software maintenance usually costs more than initial development. This helped me understand that my original idea was incorrect and that maintaining, updating, and improving software can require a lot of time and money.
+
+What helped me the most was the AI assistant, which pointed out the mistakes in my work and explained which parts were incorrect. Its feedback helped me understand what I needed to improve and how to make my answers more accurate.
+
+What I changed: I reviewed the feedback provided by the AI assistant and corrected the parts it identified as wrong. I removed incorrect information and replaced it with the correct answers based on my lecture notes. This process helped me improve my work, understand the topic better, and learn from my mistakes. Overall, the assignment helped me develop a clearer understanding of software maintenance costs.
+
+I would do everything good and nothing bad.
 
 ## 6. References
 
@@ -66,9 +86,8 @@
      Every URL used in the verification table must also appear here. Example:
      - Sommerville, I. (2016). Software Engineering, 10th ed., Global Edition. Pearson. Ch. 1.
 -->
-
-- https://cs.gmu.edu/~offutt/classes/437/maintessays/maintEvolutionOverview.html
-- https://cs.ccsu.edu/~stan/classes/CS410/Notes16/09-SoftwareEvolution.html
+- Kurkovsky, S. Software Evolution [lecture notes based on Sommerville, Software Engineering, 10th ed., Ch. 9]. https://cs.ccsu.edu/~stan/classes/CS410/Notes16/09-SoftwareEvolution.html (accessed 2026-10-10).
+- Offutt, J. Overview of Software Maintenance and Evolution. https://cs.gmu.edu/~offutt/classes/437/maintessays/maintEvolutionOverview.html (accessed 2026-10-10).
 
 ## 7. Appendix A — Initial outline
 
@@ -91,7 +110,7 @@
 
 - **Tool:** Claude
 - **Model:** Sonnet 5.5 medium
-- **Date:** 10.10.2026
+- **Date:** 2026-10-10
 - **Purpose:** contextual draft
 
 <!-- Model: the exact model with its version, as the tool shows it (e.g. "GPT-5 Thinking",
@@ -165,7 +184,7 @@ I have not cited any sources, so you will need to find and reference them yourse
 
 - **Tool:** Claude
 - **Model:** Sonnet 5.5 medium
-- **Date:** 10.10.26
+- **Date:** 2026-10-10
 - **Purpose:** critical review of the draft
 
 **Prompt:**
@@ -355,7 +374,7 @@ Tell me when you want a rewrite, or if you would like to work through one of the
 
 - **Tool:** Claude
 - **Model:** Sonnet 5.5 medium
-- **Date:** 10.10.2026
+- **Date:** 2026-10-10
 - **Purpose:** revision using my decisions and verified evidence
 
 **Prompt:**
@@ -520,8 +539,8 @@ On your questions: ranking methods isn't required, since the question asks "whic
 
 | AI claim | Source and locator | Evidence found | Decision |
 | --- | --- | --- | --- |
-| Software engineering textbooks commonly treat maintenance (fixing bugs, adapting to new needs) as a large share of total lifetime cost, often larger than initial development. | https://cs.ccsu.edu/~stan/classes/CS410/Notes16/09-SoftwareEvolution.html | it says that maintenance is commonly larger | accept   |
-| In this scenario, a semester handover makes maintenance harder, because the new organizers did not build the app. | https://cs.gmu.edu/~offutt/classes/437/maintessays/maintEvolutionOverview.html | it says about initial programmer could resolve problems more faster and better | accept |
+| Software engineering textbooks commonly treat maintenance (fixing bugs, adapting to new needs) as a large share of total lifetime cost, often larger than initial development. | https://cs.ccsu.edu/~stan/classes/CS410/Notes16/09-SoftwareEvolution.html 2026-10-10 | it says that maintenance is commonly larger | keep   |
+| In this scenario, a semester handover makes maintenance harder, because the new organizers did not build the app. | https://cs.gmu.edu/~offutt/classes/437/maintessays/maintEvolutionOverview.html 2026-10-10| it says about initial programmer could resolve problems more faster and better | keep |
 
 ### Change log
 
