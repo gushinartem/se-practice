@@ -9,7 +9,7 @@
   - Comments like this one are ignored by the word counter. Delete them or leave them.
 -->
 
-**Topic:** 1.(write here)
+**Topic:** 1.3 Software engineering and cost
 
 <!-- Exactly one of 1.1 … 1.10, e.g.  **Topic:** 1.4  -->
 
@@ -20,17 +20,17 @@
 <!-- 100–150 words, labels included. One small scenario, used in every prompt and in your
      whole answer. Anything fictional is labelled in Assumptions. -->
 
-**Question:** (write here — the question of your topic, in your own words)
+**Question:** Does faster AI code generation reduce the total lifetime cost of a small club registration app, and which enginneering methods keep the cost low?
 
-**Users:** (write here)
+**Users:** Club members and 2-3 organizers.
 
-**Problem:** (write here)
+**Problem:** Registration is done in chats and spreadsheets,so people get lost.
 
-**Constraints:** (write here — two constraints)
+**Constraints:** No budget , organisers change every semester.
 
-**Risk:** (write here — one important failure or misuse risk)
+**Risk:** AI-written code goes live without tests or documentation , and later nobody can fix it cheaply.
 
-**Assumptions:** (write here — every fictional detail, labelled as fictional)
+**Assumptions:** Fictional: 80 members , 2 developers , the app is used for 2+ years.
 
 ## 2. Analysis
 
@@ -74,11 +74,11 @@
 <!-- Written BEFORE you run Prompt A. Five points, your own words, numbered. These are the
      "five points" you paste into Prompt A. -->
 
-1. (write here)
-2. (write here)
-3. (write here)
-4. (write here)
-5. (write here)
+1. Writing the code is the first step. Fixing bugs and changing the app later can cost more than writing it.
+2. Engineering mathods could save much money on long way.
+3. In a case with fixing bugs on working app , AI wouldn't fix anything
+4. AI writes it without any documentation so it would be very hard when some bug will appear.
+5. AI should be controlled by human , not get all the responsiblity.
 
 ## 8. Appendix B — AI exchanges
 
