@@ -121,18 +121,18 @@ Base input for every row unless the row says otherwise: `now=540, blocked=False,
 
 | # | Test name | Request (start, end) | What differs from the base input | Expected | AC | Result on v1 | Result on final |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | | | | | | | |
-| 2 | | | | | | | |
-| 3 | | | | | | | |
-| 4 | | | | | | | |
-| 5 | | | | | | | |
-| 6 | | | | | | | |
-| 7 | | | | | | | |
-| 8 | | | | | | | |
-| 9 | | | | | | | |
-| 10 | | | | | | | |
-| 11 | | | | | | | |
-
+| 1 | test_touching_end_is_allowed | (660, 720) | None | True | AC4 | True (PASS) | |
+| 2 | test_overlap | (630, 690) | None | False | AC4 | False (PASS) | |
+| 3 | test_blocked | (660, 720) | blocked=True | False | AC3 | False (PASS) | |
+| 4 | test_exactly_120_minutes | (720, 840) | None | True | AC2 | True (PASS) | |
+| 5 | test_more_than_120_minutes | (720, 841) | None | False | AC2 | False (PASS) | |
+| 6 | test_starts_now | (540, 570) | None | False | AC1 | False (PASS) | |
+| 7 | test_zero_length_booking | (600, 600) | None | False | AC1 | False (PASS) | |
+| 8 | test_reverse_order | (720, 660) | None | False | AC1 | False (PASS) | |
+| 9 | test_empty_existing | (660, 720) | existing=[] | True | AC4 | True (PASS) | |
+| 10 | test_existing_with_several_bookings | (660, 720) | existing=[(600, 630), (630, 660), (720, 750)] | True | AC4 | True (PASS) | |
+| 11 | test_booking_inside_existing | (610, 620) | None | False | AC4 | False (PASS) | |
+| 12 | test_booking_contains_existing | (590, 670) | None | False | AC4 | False (PASS) | |
 ---
 
 ## 5. Task 4 — debugging with evidence
