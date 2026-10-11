@@ -57,3 +57,7 @@ class BookingTests(unittest.TestCase):
             [(600, 660), (700, 760)]
         )
         self.assertIs(result, False)
+
+    def test_starts_one_minute_after_now(self):
+        result = can_book(541, 571, 540, False, [(600, 660)])
+        self.assertIs(result, True)
