@@ -73,26 +73,40 @@ row saying which lines of the plan you checked against which AC.
 
 | # | What the plan said | What the contract or the AC says | What I did |
 | --- | --- | --- | --- |
-| 1 | No invented or changed rules idenified | Checked implementation steps 1-5 against AC1-AC5. Each step corresponds to an acceptance crtierior or the requirement to return True when all checks pass. | I found no invented rules, do I kept the plan unchaged |
+| 1 | No invented or changed rules idenified | Checked implementation steps 1-5 against AC1-AC5. Each step corresponds to an acceptance crtierior or the requirement to return True when all checks pass. | I found no invented rules, do I kept the plan unchaged 
+ |
 
 **Boundary cases the assistant suggested that I kept as tests:**
 
--
+-start == now: must return False, because AC1 requires start > now strictly.
+-start == now + 1: must return True if everything else is valid, which catches off-by-one errors in the other direction.
+-end == start: must return False, because start < end is strict.
+-start == 0 and end == 1440: a full-day span is allowed by the range, but it is 1440 minutes and fails AC2.
+-end == 1440 with a short duration, such as start=1380, end=1440: valid, which checks that end can equal 1440.
+-start = 1440 or end = 1441: must return False, to catch missing upper-bound checks.
+-Duration exactly 120, such as start=600, end=720: must return True. Duration 121 must return False.
+-Booking that ends exactly where an existing one starts, and the reverse (new booking starts exactly where an existing one ends): both must return True. This is the main check for the touching-endpoints rule.
+-Booking fully inside an existing one, an existing booking fully inside the new one, and identical intervals: all must return False.
+-blocked=True with otherwise valid times: must return False, and the check should not depend on existing.
+-Empty existing: must return True for a valid request.
+-Multiple existing bookings with the new one falling in a gap between them, including a gap of exactly the requested length: must return True.
+-Verify that existing is unchanged after every call, including calls that return False early.
+
 
 ---
 
 ## 3. Task 2 — the first version (v1), read before it was run
 
-v1 is saved as `code/original/booking_v1.<ext>`, exactly as the assistant returned it: yes / no
+v1 is saved as `code/original/booking_v1.<ext>`, exactly as the assistant returned it: yes
 
 **AC map.** One row per condition in v1. Quote the line.
 
 | # | Line in v1 | AC it implements | Correct as written? If not, why |
 | --- | --- | --- | --- |
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
+| 1 | 3 | AC1 | yes |
+| 2 | 7 | AC2 | yes |
+| 3 | 11 | AC3 | yes |
+| 4 | 16 | AC4 | yes |
 
 **Anything in v1 that no AC asks for** (extra validation, a buffer between bookings, logging,
 saving the booking, a different return type):
