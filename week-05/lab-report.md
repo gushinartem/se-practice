@@ -1,8 +1,8 @@
 # Week 05 — Lab report
 
 **Name:** Artem Guchsin
-**Group:**
-**Date:**
+**Group:** Monday 16-19
+**Date:** 2026-10-11
 
 Fill in every section. **Do not delete, rename or renumber the headings** — the checker and the
 grader find your answers by them. Add rows to any table; never remove its header.
@@ -29,7 +29,42 @@ grader find your answers by them. Add rows to any table; never remove its header
 **The assistant's plan, pasted unedited:**
 
 ```text
-(paste here)
+**Implementation plan**
+
+Run the checks in the order the criteria list them, returning False at the first failure. Because the function must never modify `existing`, it should only read from it.
+
+1. **Validate the time range (AC1):** Return False unless `0 <= start < end <= 1440` and `start > now`.
+2. **Check duration (AC2):** Return False if `end - start > 120`.
+3. **Check the blocked flag (AC3):** Return False if `blocked` is True.
+4. **Check overlaps (AC4):** For each `(s, e)` in `existing`, return False if `start < e and s < end`. This condition treats intervals as half-open, so touching endpoints do not count as overlap.
+5. **Return True** if no check failed.
+
+Python 3.14 has no features this logic depends on. A chained comparison covers AC1, and a single loop with `any()` or an explicit loop covers AC4. Clarity matters more than cleverness here.
+
+**Assumptions**
+
+- `now` is in the same day and units as `start` and `end`, so `start > now` is a direct comparison.
+- `start` and `end` are integers, as the contract says. The function does not need to handle floats or other types.
+- `existing` contains only valid tuples for this room, so the function does not need to re-validate them or check whether they are sorted or overlapping with each other.
+- Passing an empty `existing` list is valid and means no conflicts.
+- The `blocked` value is a real Boolean, so `if blocked:` is an acceptable test.
+- Only the supplied rules apply. The function does not consider opening hours, user identity, or other bookings for other rooms.
+
+**Boundary cases that could expose a wrong implementation**
+
+- `start == now`: must return False, because AC1 requires `start > now` strictly.
+- `start == now + 1`: must return True if everything else is valid, which catches off-by-one errors in the other direction.
+- `end == start`: must return False, because `start < end` is strict.
+- `start == 0` and `end == 1440`: a full-day span is allowed by the range, but it is 1440 minutes and fails AC2.
+- `end == 1440` with a short duration, such as `start=1380, end=1440`: valid, which checks that `end` can equal 1440.
+- `start = 1440` or `end = 1441`: must return False, to catch missing upper-bound checks.
+- Duration exactly 120, such as `start=600, end=720`: must return True. Duration 121 must return False.
+- Booking that ends exactly where an existing one starts, and the reverse (new booking starts exactly where an existing one ends): both must return True. This is the main check for the touching-endpoints rule.
+- Booking fully inside an existing one, an existing booking fully inside the new one, and identical intervals: all must return False.
+- `blocked=True` with otherwise valid times: must return False, and the check should not depend on `existing`.
+- Empty `existing`: must return True for a valid request.
+- Multiple existing bookings with the new one falling in a gap between them, including a gap of exactly the requested length: must return True.
+- Verify that `existing` is unchanged after every call, including calls that return False early.
 ```
 
 **What the plan invented or changed.** One row for every rule in the plan that is not in the
@@ -38,7 +73,7 @@ row saying which lines of the plan you checked against which AC.
 
 | # | What the plan said | What the contract or the AC says | What I did |
 | --- | --- | --- | --- |
-| 1 | | | |
+| 1 | No invented or changed rules idenified | Checked implementation steps 1-5 against AC1-AC5. Each step corresponds to an acceptance crtierior or the requirement to return True when all checks pass. | I found no invented rules, do I kept the plan unchaged |
 
 **Boundary cases the assistant suggested that I kept as tests:**
 
