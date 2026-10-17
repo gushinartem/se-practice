@@ -1,0 +1,56 @@
+@startuml
+title Course registration: browse, guarded success, full and duplicate outcomes
+
+actor Student
+participant "Catalog UI" as UI
+participant "RegistrationController" as Ctrl
+participant "RegistrationService" as Svc
+database "Database" as DB
+
+== Browse offerings (US-01, AC-01, AC-02) ==
+Student -> UI : select semester
+UI -> Ctrl : getOfferings(semester)
+Ctrl -> Svc : listOfferings(semester)
+Svc -> DB : SELECT offering, course, capacity,\nCOUNT(enrollments) per offering
+DB --> Svc : rows
+note right of Svc
+  empty = capacity - enrollments
+  A full offering is still returned, with 0 empty places.
+end note
+Svc --> Ctrl : offerings
+Ctrl --> UI : offerings
+UI --> Student : courseCode, title, offeringId, empty places
+
+== Register (US-02, US-03) ==
+Student -> UI : request registration(offeringId)
+UI -> Ctrl : register(studentId, offeringId)
+Ctrl -> Svc : register(studentId, offeringId)
+
+group Atomic: final checks and creation (single transaction)
+  Svc -> DB : BEGIN
+  Svc -> DB : SELECT capacity FROM CourseOffering\nWHERE offeringId = ? FOR UPDATE
+  note right of DB
+    Row lock serialises concurrent requests
+    for the same offering (AC-04).
+  end note
+  Svc -> DB : SELECT EXISTS enrollment\nWHERE studentId = ? AND offeringId = ?
+
+  alt duplicate exists (AC-06)
+    Svc -> DB : ROLLBACK
+    Svc --> Ctrl : REJECTED: already enrolled
+  else no duplicate
+    Svc -> DB : SELECT COUNT(*) FROM Enrollment\nWHERE offeringId = ?
+    alt enrollmentCount >= capacity (AC-04, AC-05)
+      Svc -> DB : ROLLBACK
+      Svc --> Ctrl : REJECTED: course full
+    else enrollmentCount < capacity (AC-03)
+      Svc -> DB : INSERT Enrollment(studentId, offeringId)
+      Svc -> DB : COMMIT
+      Svc --> Ctrl : CONFIRMED
+    end
+  end
+end
+
+Ctrl --> UI : outcome
+UI --> Student : confirmation or rejection message
+@enduml
