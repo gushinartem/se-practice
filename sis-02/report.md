@@ -1009,6 +1009,7 @@ Elements kept unchanged because they are justified: the Course, CourseOffering, 
 - PlantUML. PlantUML Language Reference Guide, version 1.2021.1, Sequence Diagram chapter, "Grouping message" and "Notes on messages". https://pdf.plantuml.net/1.2021.1/PlantUML_Language_Reference_Guide_en.pdf (accessed 2026-10-17).
 - Sommerville, I. (2016). Software Engineering, 10th ed., Global Edition. Pearson. Ch. 5.
 - Lesson #04, UML practice and validation (Week 04 slides, Teams).
+- https://people.dsv.su.se/~perjons/supcom_em/UMLClassDiagram.pdf
 ### Source checks
 
 <!-- At least two modeling decisions you verified. Source and locator: title + slide, page,
