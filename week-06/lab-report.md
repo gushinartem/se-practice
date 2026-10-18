@@ -110,8 +110,8 @@ log a justified cleanup that preserves behaviour. Save a screenshot of each as
 
 | # | Issue | Evidence: steps → expected → observed | Priority | Decision |
 | --- | --- | --- | --- | --- |
-| 1 | | | High / Medium / Low | Fix / Reject / Defer |
-| 2 | | | High / Medium / Low | Fix / Reject / Defer |
+| 1 | there no issues | everything good | Low | nothing to do |
+| 2 | there no issues | everything good | Low | nothing to do |
 
 ---
 
