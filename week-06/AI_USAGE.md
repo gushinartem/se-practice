@@ -10,18 +10,18 @@ including anything an AI tool produced.
 | Bolt.new | | cleanup prompts (Task 4) | |
 | | | | |
 
-**I used another assistant as well (to explain code, to draft text in lab-report.md, …):** yes / no
+**I used another assistant as well (to explain code, to draft text in lab-report.md, …):** no
 <!-- If "yes": which one, the exact model, and for which section. -->
 
-**`original/` holds Bolt's first version exactly as downloaded, and `evidence/v1.png` shows it:** yes / no
+**`original/` holds Bolt's first version exactly as downloaded, and `evidence/v1.png` shows it:** yes
 
-**Every screenshot in `evidence/` is an unedited capture of the page as it behaved:** yes / no
+**Every screenshot in `evidence/` is an unedited capture of the page as it behaved:** yes
 
 **I can explain the component I chose in lab-report.md section 8 — and how the page decides
-availability — without the assistant:** yes / no
+availability — without the assistant:** yes
 
 **Anything I accepted from the AI without fully understanding it:**
 <!-- Name the file and the part. An honest entry here costs far less than a blank one that turns out to be untrue. -->
 
-Signed: <your name>
-Date:
+Signed: Guchshin Artem
+Date: 2026-10-18
