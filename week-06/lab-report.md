@@ -15,7 +15,7 @@ grader find your answers by them. Add rows to any table; never remove its header
 | --- | --- |
 | Tool | Bolt.new |
 | Exact model (as Bolt shows it, or `not displayed`) | GLM 5.3 Flash  |
-| Bolt project link (or `not shared`, and why) | not shared yet |
+| Bolt project link (or `not shared`, and why) | https://bolt.new/p/72147161 |
 | Browser and version | Chrome 155.0.8059.80 |
 | If you could not use Bolt.new: the tool you used instead, and why | - |
 
@@ -49,18 +49,29 @@ AC6: The page remains usable at desktop and narrow/mobile width and gives unders
 ## 3. Task 2 — prototype v1
 
 v1 export saved in `original/` and screenshot saved as `evidence/v1.png` **before** any cleanup
-prompt: yes / no
+prompt: yes
 
 **Bolt's list of the files/components it created, pasted unedited:**
 
 ```text
-(paste here)
+src/types.ts — shared types (Room, Booking, Verdict, CheckResult)
+src/data.ts — fictional rooms and bookings
+src/utils/availability.ts — the core rule engine (validation, overlap, verdict)
+src/components/TimeInput.tsx — HH:MM time inputs with error styling
+src/components/RoomCard.tsx — selectable room tile with blocked/capacity info
+src/components/VerdictPanel.tsx — the Available/Unavailable decision card
+src/components/RoomSchedule.tsx — visual timeline of a room's day
+src/App.tsx — page that wires it all together
 ```
 
 **What v1 does — one line per thing that works, or visibly does not:**
 
--
-
+- Current time is 16:15 trying to book a room from 10:00 to 12:00, rejecting with message that ( start > now)
+- Trying to book a room from 17:00 to 18:00 , there is no book overlap and start > now , showing messsage with acceptance
+- Trying to book with overlaping time my is 17 - 19 and already booked is from 17-18  , showing message with unavailabilty
+- Trying to book a room newton seminar room, but the ui don't give me that since it's blocked
+- Trying to book a room from 17 to 20 , reject message with "bookings cannot be longer than 120 minutes"
+- Trying to book 18 - 20 a room with book at 16 - 18 , message with availability
 **Repair prompt** (only if the first build did not run — the deck allows one, then the result is
 v1). Leave empty if you did not need it:
 
