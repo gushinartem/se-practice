@@ -123,13 +123,13 @@ in) and Bolt's answer, unedited.
 **Functional fix prompt, as sent, and Bolt's answer:**
 
 ```text
-(paste here)
+Nothing is to fix everyhing works fine and how it should be
 ```
 
 **Cleanup prompt, as sent, and Bolt's answer:**
 
 ```text
-(paste here)
+Nothing is to fix everyhing works fine and how it should be
 ```
 
 Add further blocks for further prompts.
@@ -139,8 +139,8 @@ the AC (or the scope) that justifies it.
 
 | # | What Bolt changed or suggested | accept / reject | Reason — cite the AC or the scope | Retest: which cases, result |
 | --- | --- | --- | --- | --- |
-| 1 | | accept / reject | | |
-| 2 | | accept / reject | | |
+| 1 | - | accept | - | - |
+| 2 | - | accept | - | - |
 
 ---
 
