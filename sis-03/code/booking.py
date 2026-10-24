@@ -1,4 +1,3 @@
-
 """Room availability check for the Smart Campus Room Availability Checker (SIS #03)."""
  
 MINUTES_PER_DAY = 1440   # AC1: the day ends at 1440 minutes after midnight
@@ -15,6 +14,10 @@ def can_book(start, end, now, blocked, existing):
     """
     # AC3: a blocked room rejects every request
     if blocked:
+        return False
+ 
+    # AC1: start and end must be integer minutes (a bool is not a time)
+    if type(start) is not int or type(end) is not int:
         return False
  
     # AC1: 0 <= start < end <= 1440
@@ -35,3 +38,4 @@ def can_book(start, end, now, blocked, existing):
             return False
  
     return True
+ 

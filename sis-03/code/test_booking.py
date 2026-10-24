@@ -1,4 +1,3 @@
-
 import unittest
 
 from booking import can_book
@@ -59,6 +58,18 @@ class TestCanBook(unittest.TestCase):
 
     def test_negative_start_is_rejected(self):            # AC1 (0 <= start); now=-5 only isolates this bound
         self.assertFalse(can_book(-3, 10, -5, False, []))
+
+    def test_float_start_and_end_are_rejected(self):      # AC1 (integer minutes)
+        self.assertFalse(can_book(600.5, 660.5, 500, False, []))
+
+    def test_boolean_start_is_rejected(self):             # AC1 (a bool is not a time)
+        self.assertFalse(can_book(True, 60, 0, False, []))
+
+    def test_start_zero_with_now_zero_is_rejected(self):  # AC1 (start must be after now)
+        self.assertFalse(can_book(0, 30, 0, False, []))
+
+    def test_overlap_by_one_minute_is_rejected(self):     # AC4
+        self.assertFalse(check(659, 720))
 
     def test_t10_second_of_several_bookings_is_checked(self):  # AC4
         existing = [(600, 660), (700, 760)]
