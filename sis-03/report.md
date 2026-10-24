@@ -15,8 +15,8 @@
 | --- | --- |
 | Coding assistant (tool) | Claude |
 | Coding assistant model | Sonnet 5.5 medium |
-| Bolt.new model | (write here) |
-| Bolt project link | (write here) |
+| Bolt.new model | not displayed (the interface only shows “standard”) |
+| Bolt project link | https://bolt.new/p/72349374 |
 | Language | Python |
 | Path | A |
 | Python v1 from | fresh |
@@ -88,17 +88,35 @@
 
 | Branch in v1 (quoted) | AC | Satisfies it? | Why |
 | --- | --- | --- | --- |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) | (write here) |
+| `if blocked:` | AC3 | Yes | Returns `False` for every request when the room is blocked, and it is the first check, so no other input can change that. |
+| `if not (0 <= start < end <= 1440):` | AC1 | Yes | Enforces the day bounds and `start < end`. Reversed times (T7) and an end of 1441 (T9) are rejected, and an end of exactly 1440 (T8) is allowed. |
+| `if start <= now:` | AC1 | Yes | Rejects a start that is not strictly after now, so starting exactly now (T6) is refused, while 541 with now = 540 is accepted. |
+| `if end - start > 120:` | AC2 | Yes | Rejects only durations above 120 minutes, so exactly 120 (T4) passes and 121 (T5) fails. |
+| `if start < e and s < end:` | AC4 | Yes | A half-open overlap test run for every existing booking. Touching intervals (T1) do not satisfy it, real overlaps (T2, T10) do, and `existing` is only read, never changed. |
 
 ## 4. Prototype v1 in Bolt.new
 
 **Prompt as sent:**
 
 ~~~~text
-(paste here)
+Build a one-page responsive web app called "Smart Campus Room Availability Checker" for ONE selected room (Room A-101) using FICTIONAL booking data. The page only checks availability. It must not create, confirm or edit bookings.
+ 
+Inputs:
+- "Current time" (time input, default 09:00)
+- "Room blocked" (checkbox, default off)
+- "Start time" and "End time" (time inputs)
+- "Booking data" (dropdown): "Data set 1: 10:00-11:00" and "Data set 2: 10:00-11:00 and 11:40-12:40". Default is Data set 1. The list of existing bookings for the chosen set is shown on the page.
+- A "Check availability" button.
+ 
+Rules (acceptance criteria):
+- AC1: Times are minutes after midnight: 0 <= start < end <= 1440, and start must be strictly after the current time.
+- AC2: Duration must not exceed 120 minutes. Exactly 120 minutes is allowed.
+- AC3: If the room is blocked, every request is Unavailable.
+- AC4: Reject any overlap with an existing booking. Intervals that only touch at an endpoint (one ends exactly when the other starts) do NOT overlap.
+- AC5: Show a clear, unambiguous result: "Available" or "Unavailable". Never change the existing bookings; checking twice must give the same result.
+- AC6: Show an understandable validation message when input is invalid (for example, end not after start, start not after current time, longer than 120 minutes, room blocked, overlaps a booking). The layout must be usable on a narrow phone screen (about 375 px wide).
+ 
+Do NOT add: login or authentication, a backend, a database, external API calls, payments, a Book/Confirm button, a cleaning buffer, a different duration limit, or any unrelated feature. Keep all data in the front end.
 ~~~~
 
 <!-- Main generated files or components, with their path inside web/original/
@@ -106,12 +124,18 @@
 
 | Generated file or component | Path | Its role |
 | --- | --- | --- |
-| (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) |
+| Main component | `src/App.tsx` | The file Bolt reported writing: the whole page in one React component, with the form, the availability check, the result banner and the existing-bookings list. |
+| HTML entry page | `index.html` | The Vite entry point that loads the React app into the page. |
+| Project manifest | `package.json` | Lists the dependencies and the build scripts of the generated project. |
+| Tailwind configuration | `tailwind.config.js` | Configures the Tailwind CSS utility classes used to style and lay out the page. |
 
 **What v1 does:**
 
-- (write here)
+- Shows the title, a note that no booking is created, and a card for Room A-101 with a green “Not blocked” badge.
+- Offers a Current time input (09:00), a Booking data dropdown (“Data set 1: 10:00–11:00”), Start time (09:30) and End time (10:30) inputs, and a Room blocked checkbox, with the requested duration (60 min) shown live.
+- Has a single “Check availability” button; according to Bolt's reply it then shows an Available or Unavailable banner with a validation message for invalid input. I have not yet observed these results; they are tested in section 5.
+- Lists the existing bookings for Room A-101 below the form (“Intro to Algorithms, 10:00–11:00 (60 min)”) with a note that they are fictional and read-only.
+- Contains no login, backend, database or Book button in the first preview (`evidence/web-v1.png`).
 
 ## 5. Test cases — executed on both artifacts
 
@@ -125,17 +149,17 @@
 
 | Case | Name | Input | Expected | Python v1 | Python final | Page v1 | Page final |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T1 | Touching | 660–720 | Available | | | | |
-| T2 | Overlap | 630–690 | Unavailable | | | | |
-| T3 | Blocked | 660–720, blocked | Unavailable | | | | |
-| T4 | Exactly 120 min | 720–840 | Available | | | | |
-| T5 | 121 min | 720–841 | Unavailable | | | | |
-| T6 | Starts now | 540–570 | Unavailable | | | | |
-| T7 | Reversed | 720–660 | Unavailable | | | | |
-| T8 | Ends at midnight | 1380–1440 | Available | | | | |
-| T9 | Past midnight | 1380–1441 | Unavailable | | | | |
-| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | | | | |
-| T11 | Same check twice | 660–720, twice | Available | | | | |
+| T1 | Touching | 660–720 | Available | True | | | |
+| T2 | Overlap | 630–690 | Unavailable | False | | | |
+| T3 | Blocked | 660–720, blocked | Unavailable | False | | | |
+| T4 | Exactly 120 min | 720–840 | Available | True | | | |
+| T5 | 121 min | 720–841 | Unavailable | False | | | |
+| T6 | Starts now | 540–570 | Unavailable | False | | | |
+| T7 | Reversed | 720–660 | Unavailable | False | | | |
+| T8 | Ends at midnight | 1380–1440 | Available | True | | | |
+| T9 | Past midnight | 1380–1441 | Unavailable | False | | | |
+| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | False | | | |
+| T11 | Same check twice | 660–720, twice | Available | True | | | |
 | T12 | Narrow screen | T1 at ~375 px wide | Available | n/a | n/a | | |
 
 ## 6. Traceability
@@ -231,42 +255,130 @@
 
 ### B1
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Claude
+- **Model:**  Sonnet 5.5 medium
+- **Date:** 2026-10-24
+- **Stage:** Plan
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+just make everyghing yourself dont' mind
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+I'll do as much as I legitimately can. The only things I can't do for you are the things that need your hands (Bolt.new, screenshots, running the page, GitHub), and I won't invent anything that didn't happen, because the brief gives 0 for the whole SIS for fabricated prompts, results or screenshots. Everything else (the function, tests, test runs, all the report text, `AI_USAGE.md`, `submission.yml`) I'll write myself, with the §11 exchanges taken from what actually happens in this chat.
+
+## Stage A: Plan for `can_book(start, end, now, blocked, existing)`
+
+**Checks, in this order** (cheapest and most decisive first):
+1. **Blocked (AC3):** if `blocked` is true, return `False`.
+2. **Day bounds (AC1):** require `0 <= start < end <= 1440`. This also rejects reversed times.
+3. **Starts after now (AC1):** require `start > now` (strictly).
+4. **Duration (AC2):** require `end - start <= 120`.
+5. **Overlap (AC4):** for each `(s, e)` in `existing`, a clash exists if `start < e and s < end`. Return `False` on the first clash.
+6. Otherwise return `True`.
+
+**Assumptions**
+- `now` is valid (0–1439), so it isn't validated.
+- Invalid requests return `False` and never raise.
+- Intervals include the start and exclude the end, so touching endpoints don't overlap.
+- `existing` is only read: no sorting, no removing, no copying back.
+- Standard library only, nothing added beyond the contract.
+
+**Boundary tests to run**
+- T1 touching (660–720): True
+- T2 overlap (630–690): False
+- T3 blocked: False
+- T4 exactly 120 min (720–840): True
+- T5 121 min (720–841): False
+- T6 starts now (540–570): False
+- T7 reversed (720–660): False
+- T8 ends at 1440 (1380–1440): True
+- T9 ends at 1441 (1380–1441): False
+- T10 second booking (720–780 with 700–760 existing): False
+- T11 same check twice: True both times, and `existing` is unchanged
+- Plus one more: a start one minute after now (541–571) must be True.
+
+**Your approval:** if this plan is fine, reply **"approved"**. I'll then generate `can_book` as v1, which you save unedited as `code/original/booking_v1.py`.
 ~~~~
 
 ### B2
 
-- **Tool:** (write here)
-- **Model:** (write here)
-- **Date:** (write here)
-- **Stage:** (write here)
-- **Source:** (write here)
+- **Tool:** Claude
+- **Model:** Sonnet 5.5 medium
+- **Date:** 2026-10-24
+- **Stage:** Generate
+- **Source:** this SIS
 
 **Prompt:**
 
 ~~~~text
-(paste here)
+approved
 ~~~~
 
 **Response:**
 
 ~~~~text
-(paste here)
+Here is `can_book` v1, exactly as saved in `booking_v1.py`:
+
+```python
+def can_book(start, end, now, blocked, existing):
+    """Return True only when AC1-AC4 all hold, otherwise False.
+
+    start, end: requested interval in minutes after midnight (start included, end excluded)
+    now: current time in minutes after midnight (assumed valid, 0-1439)
+    blocked: True if the selected room is blocked
+    existing: collection of (start, end) pairs; it is only read, never changed
+    """
+    # AC3: a blocked room rejects every request
+    if blocked:
+        return False
+
+    # AC1: 0 <= start < end <= 1440
+    if not (0 <= start < end <= 1440):
+        return False
+
+    # AC1: start must be strictly after now
+    if start <= now:
+        return False
+
+    # AC2: at most 120 minutes (exactly 120 is allowed)
+    if end - start > 120:
+        return False
+
+    # AC4: reject overlap; touching at an endpoint is not an overlap
+    for s, e in existing:
+        if start < e and s < end:
+            return False
+
+    return True
+```
+
+It follows the approved plan: blocked, then day bounds, then starts-after-now, then duration, then overlap. It uses only the standard library and never modifies `existing`.
+
+**I ran v1 and this is what it actually returned** (base data: now = 540, existing = [(600, 660)]):
+
+| Case | Result | Expected | Match |
+| --- | --- | --- | --- |
+| T1 | True | True | ✓ |
+| T2 | False | False | ✓ |
+| T3 | False | False | ✓ |
+| T4 | True | True | ✓ |
+| T5 | False | False | ✓ |
+| T6 | False | False | ✓ |
+| T7 | False | False | ✓ |
+| T8 | True | True | ✓ |
+| T9 | False | False | ✓ |
+| T10 | False | False | ✓ |
+| T11 | True, True (and `existing` unchanged) | True, True | ✓ |
+
+Start 541 to 571 also returned True, as it should.
+
+Python v1 passed every case, which the brief allows. In §3 we say v1 was already correct, and in §7 we log a preventive cleanup (adding tests, tightening the docstring and type handling) instead of inventing a defect. I won't make up a bug that doesn't exist.
 ~~~~
 
 ### B3
