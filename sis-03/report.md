@@ -149,18 +149,18 @@ Do NOT add: login or authentication, a backend, a database, external API calls, 
 
 | Case | Name | Input | Expected | Python v1 | Python final | Page v1 | Page final |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| T1 | Touching | 660–720 | Available | True | | | |
-| T2 | Overlap | 630–690 | Unavailable | False | | | |
-| T3 | Blocked | 660–720, blocked | Unavailable | False | | | |
-| T4 | Exactly 120 min | 720–840 | Available | True | | | |
-| T5 | 121 min | 720–841 | Unavailable | False | | | |
-| T6 | Starts now | 540–570 | Unavailable | False | | | |
-| T7 | Reversed | 720–660 | Unavailable | False | | | |
-| T8 | Ends at midnight | 1380–1440 | Available | True | | | |
-| T9 | Past midnight | 1380–1441 | Unavailable | False | | | |
-| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | False | | | |
-| T11 | Same check twice | 660–720, twice | Available | True | | | |
-| T12 | Narrow screen | T1 at ~375 px wide | Available | n/a | n/a | | |
+| T1 | Touching | 660–720 | Available | True | | Available | |
+| T2 | Overlap | 630–690 | Unavailable | False | | Unavailable | |
+| T3 | Blocked | 660–720, blocked | Unavailable | False | | Unavailable | |
+| T4 | Exactly 120 min | 720–840 | Available | True | | Available | |
+| T5 | 121 min | 720–841 | Unavailable | False | | Unavailable | |
+| T6 | Starts now | 540–570 | Unavailable | False | | Unavailable | |
+| T7 | Reversed | 720–660 | Unavailable | False | | Unavailable | |
+| T8 | Ends at midnight | 1380–1440 | Available | True | | Available | |
+| T9 | Past midnight | 1380–1441 | Unavailable | False | | Unavailable | |
+| T10 | Second booking | 720–780, existing (600–660), (700–760) | Unavailable | False | | Unavailable | |
+| T11 | Same check twice | 660–720, twice | Available | True | | Available | |
+| T12 | Narrow screen | T1 at ~375 px wide | Available | n/a | n/a | Available | |
 
 ## 6. Traceability
 
