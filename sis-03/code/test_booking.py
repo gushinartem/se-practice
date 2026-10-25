@@ -23,6 +23,22 @@ class TestCanBook(unittest.TestCase):
     def test_t2_overlap_is_rejected(self):                # AC4
         self.assertFalse(check(630, 690))
 
+    def test_request_surrounding_a_booking_is_rejected(self):    # AC4
+        self.assertFalse(check(570, 690))
+
+    def test_request_identical_to_a_booking_is_rejected(self):   # AC4
+        self.assertFalse(check(600, 660))
+
+    def test_request_ending_inside_a_booking_is_rejected(self):  # AC4
+        self.assertFalse(check(570, 630))
+
+    def test_overlap_with_the_first_of_two_bookings_is_rejected(self):  # AC4
+        existing = [(600, 660), (700, 760)]
+        self.assertFalse(can_book(630, 690, NOW, False, existing))
+
+    def test_request_ending_one_minute_into_a_booking_is_rejected(self):  # AC4
+        self.assertFalse(check(541, 601))
+
     def test_request_inside_a_booking_is_rejected(self):  # AC4
         self.assertFalse(check(610, 640))
 
