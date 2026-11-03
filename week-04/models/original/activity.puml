@@ -1,0 +1,38 @@
+@startuml
+title Activity Diagram: Book Room
+
+start
+
+:Student selects room, start time and end time;
+:Submit booking request;
+
+if (Start time is in the future?) then ([yes])
+else ([no])
+  :Reject request: start time must be in the future;
+  stop
+endif
+
+if (Duration greater than 0 and at most 2 hours?) then ([yes])
+else ([no])
+  :Reject request: duration must be greater than 0 and at most 2 hours;
+  stop
+endif
+
+if (Room is blocked?) then ([yes])
+  :Reject request: room is out of service;
+  stop
+else ([no])
+endif
+
+if (Slot overlaps an active booking for this room?) then ([yes])
+  :Reject request: slot already booked;
+  stop
+else ([no])
+endif
+
+:Create booking with status ACTIVE;
+:Generate confirmation;
+:Show confirmation to Student;
+
+stop
+@enduml
