@@ -1,0 +1,44 @@
+@startuml
+title Course registration: domain model
+
+class Course {
+  + courseCode : String <<PK>>
+  + title : String
+}
+
+class CourseOffering {
+  + offeringId : String <<PK>>
+  + semester : String
+  + capacity : int
+  / enrollmentCount : int
+  / availablePlaces : int
+}
+
+class Student {
+  + studentId : String <<PK>>
+}
+
+class Enrollment {
+  + studentId : String <<PK, FK>>
+  + offeringId : String <<PK, FK>>
+}
+
+Course "1" -- "0..*" CourseOffering : is scheduled as >
+CourseOffering "1" -- "0..*" Enrollment : has >
+Student "1" -- "0..*" Enrollment : holds >
+
+note top of CourseOffering
+  Constraints:
+  capacity > 0 (positive whole number)
+  enrollmentCount <= capacity (never exceeded, R2)
+  availablePlaces = capacity - enrollmentCount (Assumption 1)
+  enrollmentCount is derived from Enrollment records (D3, R2)
+end note
+
+note bottom of Enrollment
+  Uniqueness: (studentId, offeringId) is unique (R3).
+  Composite key, so no surrogate ID is needed.
+  Creating one Enrollment is the only change that
+  increases enrollmentCount (R4).
+end note
+@enduml
