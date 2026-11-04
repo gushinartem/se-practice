@@ -78,17 +78,122 @@ five columns.
 `Vitest`, followed by the case table from section 3:
 
 ```text
-(paste here)
+Generate tests for the existing booking function using Vitest. Use AC1–AC6 and the reviewed case table below.
+
+Import the real function used by the page. Keep its code unchanged. Use fixed time and fresh fixtures. Assert exact decisions and unchanged booking data.
+
+Return the test file, run command, and AC mapping. Flag unclear requirements. We will run the tests ourselves.
+
+AC1: Accept a candidate interval only when 0 ≤ start < end ≤ 1440 and start is after the supplied current time.
+AC2: Reject a booking longer than 120 minutes.
+AC3: Reject the request when the selected room is blocked.
+AC4: Reject any interval that overlaps an existing booking; touching endpoints are allowed.
+AC5: Show a clear Available / Unavailable decision without changing the existing booking data.
+AC6: The page remains usable at desktop and narrow/mobile width and gives understandable validation feedback.
+
+Default fixture: now = 540, blocked = false, bookings = [{ start: 600, end: 660 }], fresh for every test.
+
+| ID | Candidate / changed input | Expected | AC |
+| --- | --- | --- | --- |
+| T01 | 660–720 (touching after) | true | AC4 |
+| T02 | 540–570 (starts now) | false | AC1 |
+| T03 | 720–720 (zero duration) | false | AC1 |
+| T04 | 750–720 (reversed) | false | AC1 |
+| T05 | 1380–1441 (past day end) | false | AC1 |
+| T06 | 720–840 (120 minutes) | true | AC2 |
+| T07 | 720–841 (121 minutes) | false | AC2 |
+| T08 | 570–600 (touching before) | true | AC4 |
+| T09 | 630–690 (partial overlap) | false | AC4 |
+| T10 | 570–690 (contains booking) | false | AC4 |
+| T11 | 615–645 (inside booking) | false | AC4 |
+| T12 | 600–660 (identical interval) | false | AC4 |
+| T13 | 660–720, blocked = true | false | AC3 |
+| T14 | 630–690, bookings = [] | true | AC4 |
+| AC5 | an Available request — the bookings after the call equal the bookings before | true, data unchanged | AC5 |
+| X1 | 541–600 (one minute after now, touching the booking) | true | AC1 |
+| X2 | 1320–1440 (ends exactly at the end of the day) | true | AC1 |
+
+The function under test is in src/booking.ts:
+
+export function canBook({
+  start,
+  end,
+  now,
+  blocked,
+  bookings,
+}: {
+  start: number;
+  end: number;
+  now: number;
+  blocked: boolean;
+  bookings: { start: number; end: number }[];
+}): boolean {
+  if (Number.isNaN(start) || Number.isNaN(end)) {
+    return false;
+  }
+
+  if (start < 0 || end > 1440) {
+    return false;
+  }
+  if (start >= end) {
+    return false;
+  }
+  if (start <= now) {
+    return false;
+  }
+
+  if (end - start > 120) {
+    return false;
+  }
+
+  if (blocked) {
+    return false;
+  }
+
+  if (bookings.some((b) => start < b.end && b.start < end)) {
+    return false;
+  }
+
+  return true;
+}
 ```
 
 **The assistant's answer: run command, AC mapping and any unclear requirements it flagged,
 pasted unedited.** Its test file goes to `suites/first/` and is not pasted here:
 
 ```text
-(paste here)
+## Run command
+
+npx vitest run tests/booking.test.ts
+
+If Vitest is not installed yet: `npm i -D vitest`. The import path `../src/booking` assumes the test sits in `tests/` beside `src/`. Adjust it if your layout differs.
+
+## AC mapping
+
+| AC | Covered by | Notes |
+| --- | --- | --- |
+| AC1 (bounds, start after now) | T02, T03, T04, T05, X1, X2 | Covered by the function's boolean result. |
+| AC2 (max 120 minutes) | T06, T07 | Covered. |
+| AC3 (blocked room) | T13 | Covered. |
+| AC4 (overlap, touching allowed) | T01, T08, T09, T10, T11, T12, T14 | Covered. |
+| AC5 (Available/Unavailable, data unchanged) | AC5 block, plus T01 and T09 data checks | Data-unchanged part is covered. The visible "Available / Unavailable" label is UI and is **not** covered by this unit file. |
+| AC6 (desktop and mobile layout, validation feedback) | None | Not testable with `canBook`. Needs component or end-to-end tests (for example Testing Library, or Playwright at desktop and ~375px widths). |
+
+I checked every expected value in the table against the code. All 16 rows match the current implementation, so I expect them to pass without changes to `src/booking.ts`.
+
+## Unclear requirements to flag
+
+1. **Page import.** You asked for the function the page uses, but I only have `src/booking.ts`. Please confirm the page imports `canBook` from that file and does not wrap it, or the tests may not exercise the real page logic.
+2. **AC5 "Available / Unavailable" display.** The function returns a boolean and does not render anything. Where the label is produced, and what text is expected, needs to be specified before it can be tested.
+3. **AC6 has no testable criteria.** "Usable at narrow width" and "understandable validation feedback" need measurable criteria (breakpoint, minimum tap target size, the exact error messages, and when they appear) before they can become tests.
+4. **Start equal to now.** AC1 says "after the supplied current time." The code rejects `start == now` (T02 depends on this). Please confirm that is intended and not "at or after."
+5. **Non-integer and out-of-range inputs.** The code does not reject fractional minutes (for example 600.5). It also does not reject `now` outside 0–1440, or malformed existing bookings such as `start > end`. None of these are in the table or the ACs. Should they be specified?
+6. **Overlap scope.** The code checks only the `bookings` array passed in. I assumed that array holds bookings for the selected room only. Please confirm.
+7. **Time source.** `canBook` takes `now` as a parameter and does not read the clock, so no fake timers are needed. The tests use a fixed `now = 540`. If the page computes `now` from the real clock, that wiring is untested here.
+8. **Fixture freshness.** `makeInput` builds new objects on each call. The AC5 test uses `structuredClone` to check that the data is unchanged. If you want stricter checks, we could deep-freeze the fixture so any mutation throws.
 ```
 
-The first suite was saved to `suites/first/` **before** I changed anything in it: yes / no
+The first suite was saved to `suites/first/` **before** I changed anything in it: yes
 
 ---
 
