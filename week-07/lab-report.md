@@ -706,11 +706,11 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
 
 | Measure | First suite | Improved suite |
 | --- | --- | --- |
-| Executed / passed / failed | | |
-| Requirements with meaningful tests (AC IDs and gaps) | | |
-| Selected mutants detected | | |
-| Accepted / revised / rejected tests | | |
-| Remaining limitations | | |
+| Executed / passed / failed | 18 / 18 / 0 | 22 / 22 / 0 |
+| Requirements with meaningful tests (AC IDs and gaps) | AC1–AC5 with exact decisions; gaps: only one existing booking (a bug checking only the first booking would pass), AC5 had a tautological assertion, AC6 not covered | AC1–AC5 with one named test per ID and extra boundaries (two bookings, gap between them, one-minute overlap, blocked with no bookings); gap: AC6 and the visible Available/Unavailable label are only checked by hand (§8) |
+| Selected mutants detected | Not run against the first suite; by reading it, T06 would catch M1, T01 and T08 would catch M2, and T13 would catch M3 | 3 of 3 (M1: T06, X2; M2: X1, T01, T08, B02, AC5; M3: T13, B04) |
+| Accepted / revised / rejected tests | 2 accepted / 3 revised / 4 rejected (the 9 decisions in §5) | Not applicable: the improved suite is the result of those decisions |
+| Remaining limitations | Table-driven `it.each` with no ID in the names; false AC mapping; wrong import path | Only three mutants tried; NaN and fractional minutes not tested because no AC decides them; invalid existing bookings unspecified (§9.3); UI checked by hand only |
 
 ### 9.3 What no AC decides
 
@@ -718,8 +718,8 @@ Call your function with `bookings = [{ start: 700, end: 650 }]` (a reversed exis
 and a request of 660–720. What does it return? Does any AC say what it should return? (This is
 the value you declare in `submission.yml` under `assumptions.invalid_existing_booking`.)
 
--
-
+---
+- With `bookings = [{ start: 700, end: 650 }]` and a request of 660–720, my `canBook` returns `true` (Available). The overlap test is `start < b.end && b.start < end`, which becomes `660 < 650`, and that is false, so the reversed booking never counts as an overlap. No AC says what should happen: AC4 talks about overlapping an existing booking, but a booking with start after end is not a valid interval, so the ACs give no answer. I declare `true` as my assumption and I did not change the code, because the behaviour is unspecified rather than wrong.
 ---
 
 ## 10. Conclusion (120–180 words)
@@ -734,3 +734,4 @@ the value you declare in `submission.yml` under `assumptions.invalid_existing_bo
      pass, M1 would have become the real behaviour." -->
 
 <!-- Write your conclusion below this line -->
+(a) The first suite had correct expectations, so its real weakness was missing coverage. It tested only one existing booking, so a canBook that checked only bookings[0] would still pass. Its AC5 test also held a tautological assertion comparing an array with itself. I found both by reading the file before running it, and I added B01 (overlaps only the second of two bookings) and B02 (fits between two bookings). (b) The final green run of 22 tests proves that these inputs give the decisions my AC-based plan predicts. The mutants show it is sensitive: M1 failed T06 and X2, M2 failed five tests, M3 failed T13 and B04. It does not prove the page is correct. U2 was not testable, since the page cannot block a room, and no unit test sees layout. It also says nothing about invalid existing bookings, where my canBook returns true. (c) A limitation that remains: I tried only three mutants, so other defects, such as mishandling fractional minutes, may still survive.
