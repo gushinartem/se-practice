@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Clock, Search, Sparkles } from "lucide-react";
 import { SAMPLE_BOOKINGS, SAMPLE_ROOMS } from "./data";
-import type { Room } from "./types";
+import type {CheckResult, Room } from "./types";
 import {
   checkAvailability,
   fmt,
   parseHHMM,
 } from "./utils/availability";
+import { canBook } from "./booking";
 import { TimeInput } from "./components/TimeInput";
 import { RoomCard } from "./components/RoomCard";
 import { VerdictPanel } from "./components/VerdictPanel";
@@ -37,14 +38,33 @@ function App() {
   const start = parseHHMM(startStr);
   const end = parseHHMM(endStr);
 
-  const result = useMemo(() => {
+  const result = useMemo<CheckResult | null>(() => {
     if (!startStr || !endStr) return null;
-    return checkAvailability(
+
+    // Keep checkAvailability: VerdictPanel needs its reasons list.
+    const base = checkAvailability(
       { start, end },
       selectedRoom,
       bookings,
       currentTime
     );
+
+    // The Available / Unavailable decision comes from canBook.
+    const verdict = selectedRoom
+      ? canBook({
+          start,
+          end,
+          now: currentTime,
+          blocked: selectedRoom.blocked,
+          bookings: bookings
+            .filter((b) => b.roomId === selectedRoom.id)
+            .map((b) => ({ start: b.start, end: b.end })),
+        })
+        ? "available"
+        : "unavailable"
+      : "unavailable";
+
+    return { verdict, reasons: base.reasons };
   }, [startStr, endStr, start, end, selectedRoom, bookings, currentTime]);
 
   const filteredRooms = useMemo(() => {

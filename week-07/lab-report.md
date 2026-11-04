@@ -1,8 +1,8 @@
 # Week 07 — Lab report
 
-**Name:**
-**Group:**
-**Date:**
+**Name:** Guchshin Artem
+**Group:** Monday16-19
+**Date:** 2026-11-03
 
 Fill in every section. **Do not delete, rename or renumber the headings.** The checker and the
 grader find your answers by them. You can add rows to any table, but never remove its header.
@@ -13,13 +13,13 @@ grader find your answers by them. You can add rows to any table, but never remov
 
 | | |
 | --- | --- |
-| Project I continue (`week-06` = my Week 06 Bolt project, `starter` = the provided starter) | |
-| Bolt project link (or `not shared`, and why) | |
-| Assistant that generated the tests (tool) | |
-| Exact model (with its version, or `not displayed`) | |
-| Where I ran the tests (Bolt terminal / my computer / Codespace) | |
-| Vitest version (the `RUN  v…` line of a run) | |
-| Test command | |
+| Project I continue (`week-06` = my Week 06 Bolt project, `starter` = the provided starter) | week-06 |
+| Bolt project link (or `not shared`, and why) | https://bolt.new/p/72349374  |
+| Assistant that generated the tests (tool) | Claude |
+| Exact model (with its version, or `not displayed`) | Haiku 5.5 low |
+| Where I ran the tests (Bolt terminal / my computer / Codespace) | my computer |
+| Vitest version (the `RUN  v…` line of a run) |  |
+| Test command | npx vitest run |
 
 ---
 
@@ -29,16 +29,16 @@ grader find your answers by them. You can add rows to any table, but never remov
 
 | | |
 | --- | --- |
-| File and function (or "inside the page component") | |
-| Its inputs | |
-| What it returned | |
-| How the page used it | |
+| File and function (or "inside the page component") | src/utils/availability.ts, function checkAvailability. It is called from src/App.tsx. |
+| Its inputs | 	interval ({ start, end } in minutes), room (a Room object with id, name, blocked, or null), bookings (the bookings of all rooms, each with a roomId), and currentTime in minutes. |
+| What it returned | An object { verdict: "available" or "unavailable", reasons: string[] }, not a boolean. The reasons are messages such as “Start time must be after the current campus time.” |
+| How the page used it | App.tsx calls it inside useMemo, but only once both start and end are typed. The result goes to VerdictPanel, which shows a green “Available” or a red “Unavailable” with the list of reasons. |
 
 **What I changed to extract `canBook`.** Say which file it now lives in, what you moved, and why
 the behaviour did not change. Also say which file of the page now calls it. 40 words or more.
 
 <!-- Write below this line -->
-
+I created src/booking.ts and moved the booking decision into one function, canBook({ start, end, now, blocked, bookings }), which returns true or false. I copied the conditions from checkAvailability in src/utils/availability.ts without changing them: NaN check, day bounds (0 ≤ start, end ≤ 1440), start < end, start after now, duration at most 120 minutes, blocked room, and the overlap check where touching endpoints are allowed. The behaviour did not change because I only copied the same comparisons and the page still gives the same Available / Unavailable result for the same inputs; I checked this in the browser. The page file src/App.tsx now imports canBook from ./booking and calls it for the verdict. It filters the bookings by the selected room and passes the room's blocked flag and the campus time as now. The HH:MM parsing and the reason messages stay in availability.ts and the page.
 ---
 
 ## 3. Task 2 — the test plan
