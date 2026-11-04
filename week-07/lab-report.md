@@ -598,7 +598,38 @@ change and after restoring the correct code from section 7. Every test must pass
 is still open, leave its test failing and explain it in 9.1.
 
 ```text
+E:\Github\se-practice\week-07\app>npx vitest run
 
+ RUN  v3.2.7 E:/Github/se-practice/week-07/app
+
+ ✓ src/booking.test.ts (22 tests) 6ms
+   ✓ AC1: interval bounds and start after now > T02 AC1: starts now (540-570) is rejected 1ms
+   ✓ AC1: interval bounds and start after now > T03 AC1: zero duration (720-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T04 AC1: reversed interval (750-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T05 AC1: past the end of the day (1380-1441) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > X1 AC1: first minute after now, touching the booking (541-600) is accepted 0ms
+   ✓ AC1: interval bounds and start after now > X2 AC1: ends exactly at the end of the day (1320-1440) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T06 AC2: exactly 120 minutes (720-840) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T07 AC2: 121 minutes (720-841) is rejected 0ms
+   ✓ AC3: blocked room > T13 AC3: blocked room (660-720) is rejected 0ms
+   ✓ AC3: blocked room > B04 AC3: blocked room with no bookings (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T08 AC4: touching before the booking (570-600) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T09 AC4: partial overlap (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T10 AC4: interval contains the booking (570-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T11 AC4: interval inside the booking (615-645) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T12 AC4: identical interval (600-660) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T14 AC4: no bookings (630-690) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B01 AC4: overlaps only the second of two bookings (740-800) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B03 AC4: overlaps the booking by one minute (659-661) is rejected 0ms
+   ✓ AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged 1ms
+   ✓ AC5: the decision does not change the booking data > B05 AC5: an Unavailable request also leaves the bookings unchanged 0ms
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  15:28:59
+   Duration  899ms (transform 53ms, setup 0ms, collect 58ms, tests 6ms, environment 0ms, prepare 570ms)
 ```
 
 ---
@@ -611,18 +642,37 @@ error does not count as detection.
 
 | Trial | Intentional change | Detected / Survived | Failing test ID(s) | If it survived: why, and what you added |
 | --- | --- | --- | --- | --- |
-| M1 | Reject duration >= 120 instead of > 120 | Detected / Survived | | |
-| M2 | Treat touching endpoints as an overlap | Detected / Survived | | |
-| M3 | Remove the blocked-room rejection | Detected / Survived | | |
+| M1 | Reject duration >= 120 instead of > 120 | Detected | T06, X2 | Not applicable, it was detected. Both failing tests use exactly 120 minutes (720-840 and 1320-1440), so AC2's "exactly 120 is allowed" boundary is protected. |
+| M2 | Treat touching endpoints as an overlap | Detected | X1, T01, T08, B02, AC5 | Not applicable, it was detected. Five tests failed because all of them use touching endpoints; AC5 fails too because its Available request 660-720 touches the booking 600-660. |
+| M3 | Remove the blocked-room rejection | Detected | T13, B04 | Not applicable, it was detected. B04 shows the blocked rule is tested on its own, with no bookings to cause the rejection. |
 
 **The run of each mutant, pasted unedited.** Paste the `Tests` summary line and the failing test
 names at least:
 
 ```text
-(paste here)
+M1 (>= 120 instead of > 120)
+ FAIL  src/booking.test.ts > AC1: interval bounds and start after now > X2 AC1: ends exactly at the end of the day (1320-1440) is accepted
+ FAIL  src/booking.test.ts > AC2: maximum 120 minutes > T06 AC2: exactly 120 minutes (720-840) is accepted
+ Test Files  1 failed (1)
+      Tests  2 failed | 20 passed (22)
+
+M2 (touching endpoints treated as overlap)
+ FAIL  src/booking.test.ts > AC1: interval bounds and start after now > X1 AC1: first minute after now, touching the booking (541-600) is accepted
+ FAIL  src/booking.test.ts > AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted
+ FAIL  src/booking.test.ts > AC4: overlap, touching allowed > T08 AC4: touching before the booking (570-600) is accepted
+ FAIL  src/booking.test.ts > AC4: overlap, touching allowed > B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted
+ FAIL  src/booking.test.ts > AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged
+ Test Files  1 failed (1)
+      Tests  5 failed | 17 passed (22)
+
+M3 (blocked-room rejection removed)
+ FAIL  src/booking.test.ts > AC3: blocked room > T13 AC3: blocked room (660-720) is rejected
+ FAIL  src/booking.test.ts > AC3: blocked room > B04 AC3: blocked room with no bookings (630-690) is rejected
+ Test Files  1 failed (1)
+      Tests  2 failed | 20 passed (22)
 ```
 
-All three changes reverted, and the full suite run again (section 6.3): yes / no
+All three changes reverted, and the full suite run again (section 6.3): yes
 
 ---
 
