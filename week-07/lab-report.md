@@ -206,8 +206,11 @@ requests* · *mocked booking function*, or your own) and the AC that decides it.
 
 | # | Test or part of the suite | What is weak or wrong | Decision: accept / revise / reject | AC or reason |
 | --- | --- | --- | --- | --- |
-| 1 | | | accept / revise / reject | |
-| 2 | | | accept / revise / reject | |
+| 1 | The `it.each` block with all 16 cases (T01–T14, X1, X2) | Table-driven, so there is no test with its own ID in the title; a failure is hard to attribute to one case. Not an exact kind from the deck's table, my own weakness: cases are not individually named. | revise | The final suite needs one test per ID with the ID in the title (AC1–AC4 cases) |
+| 2 | The expected values of the 16 cases | The assistant says it checked them against the code (risk: expected = current output). I compared each one with my plan: T06 true (120 minutes, AC2), T02 false (start = now, AC1), T08 and T01 true (touching, AC4). They all match. | accept | AC1, AC2, AC4: the values come from the ACs and my §3 plan, not from the code |
+| 3 | The AC5 test "returns true for an available request..." | The title has no `AC5` ID. The data check itself is good (`structuredClone` copy compared after the call). | revise | AC5: rename the test so the ID is in the title |
+| 4 | The AC mapping claiming "T01 and T09 data checks" for AC5 | Not true: those tests only assert the decision, they do not compare the bookings. Only the AC5 tests check the data. | reject | AC5: the claim does not match the file |
+| 5 | The import `../src/booking` and the run command `tests/booking.test.ts` | The import only works by the file's location; the command points to a folder I don't have. The real function is imported (no mock), which is correct. | revise | Real function used by the page (no mock); final suite imports `./booking` beside the module |
 
 ---
 
