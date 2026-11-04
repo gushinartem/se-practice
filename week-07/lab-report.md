@@ -18,7 +18,7 @@ grader find your answers by them. You can add rows to any table, but never remov
 | Assistant that generated the tests (tool) | Claude |
 | Exact model (with its version, or `not displayed`) | Haiku 5.5 low |
 | Where I ran the tests (Bolt terminal / my computer / Codespace) | my computer |
-| Vitest version (the `RUN  v…` line of a run) |  |
+| Vitest version (the `RUN  v…` line of a run) | 3.2.7 |
 | Test command | npx vitest run |
 
 ---
@@ -206,11 +206,15 @@ requests* · *mocked booking function*, or your own) and the AC that decides it.
 
 | # | Test or part of the suite | What is weak or wrong | Decision: accept / revise / reject | AC or reason |
 | --- | --- | --- | --- | --- |
-| 1 | The `it.each` block with all 16 cases (T01–T14, X1, X2) | Table-driven, so there is no test with its own ID in the title; a failure is hard to attribute to one case. Not an exact kind from the deck's table, my own weakness: cases are not individually named. | revise | The final suite needs one test per ID with the ID in the title (AC1–AC4 cases) |
-| 2 | The expected values of the 16 cases | The assistant says it checked them against the code (risk: expected = current output). I compared each one with my plan: T06 true (120 minutes, AC2), T02 false (start = now, AC1), T08 and T01 true (touching, AC4). They all match. | accept | AC1, AC2, AC4: the values come from the ACs and my §3 plan, not from the code |
-| 3 | The AC5 test "returns true for an available request..." | The title has no `AC5` ID. The data check itself is good (`structuredClone` copy compared after the call). | revise | AC5: rename the test so the ID is in the title |
-| 4 | The AC mapping claiming "T01 and T09 data checks" for AC5 | Not true: those tests only assert the decision, they do not compare the bookings. Only the AC5 tests check the data. | reject | AC5: the claim does not match the file |
-| 5 | The import `../src/booking` and the run command `tests/booking.test.ts` | The import only works by the file's location; the command points to a folder I don't have. The real function is imported (no mock), which is correct. | revise | Real function used by the page (no mock); final suite imports `./booking` beside the module |
+| 1 | The `it.each` block with all 16 cases (T01–T14, X1, X2) | Table-driven: no test has its own ID in the title, so a failure is hard to attribute to one case. This is my own weakness type, not one from the deck's table. | revise | The final suite needs one test per ID with the ID in the title (AC1–AC4 cases) |
+| 2 | The expected values of the 16 cases | The assistant said it checked them against the code (risk: expected = current output). I compared each with my §3 plan: T02 false (start = now, AC1), T06 true (exactly 120 minutes, AC2), T01 and T08 true (touching endpoints, AC4). All match. | accept | AC1, AC2, AC4: the values come from the ACs, not from the code |
+| 3 | The AC5 test "returns true for an available request..." | The title has no `AC5` ID. The data check itself (`structuredClone` copy compared after the call) is good. | revise | AC5: rename so the ID is in the title |
+| 4 | `expect(input.bookings[0]).toBe(bookings[0])` in the AC5 test | Tautological: `input.bookings` is the same array as `bookings`, so it always passes and detects nothing (same weakness as "no exception occurred": a wrong function would still pass). | reject | AC5: only the comparison with the copy taken before the call proves the data is unchanged |
+| 5 | The AC mapping that claims "T01 and T09 data checks" for AC5 | Not true: T01 and T09 only assert the decision, they never compare the bookings. | reject | AC5: the claim does not match the file |
+| 6 | Import `../src/booking` and run command `tests/booking.test.ts` | The import works only because of the file's location, and the command points to a folder my project does not have. The real function is imported with no mock, which is correct. | revise | Real function used by the page; the final suite imports `./booking` beside the module |
+| 7 | Improvement review: `deepFreeze`, factory overrides and `Parameters<typeof canBook>` typing | Extra complexity. The `structuredClone` comparison already proves AC5, and a plain helper function gives fresh data per test. | reject | AC5; simpler tests are easier to review |
+| 8 | Improvement review: extra cases NaN (B07) and negative `now` (B01, B02) | No AC mentions NaN. A negative current time is not a valid campus time, so the test would assert behaviour nobody specified. | reject | No AC decides them; they would copy the code's behaviour (expected = current output) |
+| 9 | Improvement review: extra boundaries (two bookings, gap between them, one-minute overlap, blocked with no bookings) | The first suite had only one booking, so a bug that checks only the first booking, or an off-by-one overlap, would pass. | accept | AC4 (overlap, touching allowed) and AC3 (blocked rule works on its own) |
 
 ---
 
@@ -223,7 +227,34 @@ The **real** terminal output of the first run of the first suite, pasted unedite
 is not a run.
 
 ```text
-(paste here)
+E:\Github\se-practice\week-07\app>npx vitest run
+
+ RUN  v3.2.7 E:/Github/se-practice/week-07/app
+
+ ✓ src/booking.test.ts (18 tests) 7ms
+   ✓ canBook: case table (AC1-AC4) > T01 (660-720) returns {} [true] 2ms
+   ✓ canBook: case table (AC1-AC4) > T02 (540-570) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T03 (720-720) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T04 (750-720) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T05 (1380-1441) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T06 (720-840) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > T07 (720-841) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T08 (570-600) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > T09 (630-690) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T10 (570-690) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T11 (615-645) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T12 (600-660) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T13 (660-720) returns { blocked: true } [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T14 (630-690) returns { bookings: [] } [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > X1 (541-600) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > X2 (1320-1440) returns {} [true] 0ms
+   ✓ canBook: AC5 - decision does not change booking data > returns true for an available request and leaves bookings byte-for-byte equal 2ms
+   ✓ canBook: AC5 - decision does not change booking data > leaves bookings unchanged for an unavailable request too 0ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  14:56:44
+   Duration  2.64s (transform 282ms, setup 0ms, collect 73ms, tests 7ms, environment 0ms, prepare 2.30s)
 ```
 
 **Each failure, diagnosed** (the deck's table: import/runner error · assertion mismatch · result
@@ -231,7 +262,7 @@ changing per run · no tests discovered). Write `none` in the first row if nothi
 
 | Failing test | Observed failure | First check | Test repair or implementation fix? | Action taken |
 | --- | --- | --- | --- | --- |
-| | | | | |
+| none | none |  none | none | none |
 
 ### 6.2 The improvement prompt
 
@@ -239,7 +270,325 @@ The deck's improvement prompt exactly as sent, followed by the actual output fro
 paste the assistant's answer, unedited:
 
 ```text
-(paste here)
+Review this test suite against AC1–AC6 and our case table. Identify incorrect expectations, weak assertions, duplicated cases, and missing boundaries.
+
+For each proposed change, explain the requirement and the defect it could detect. Improve the tests without changing correct expectations to match buggy behavior.
+
+Use the actual failure output below. Separate test repairs from implementation fixes.
+
+E:\Github\se-practice\week-07\app>npx vitest run
+
+ RUN  v3.2.7 E:/Github/se-practice/week-07/app
+
+ ✓ src/booking.test.ts (18 tests) 7ms
+   ✓ canBook: case table (AC1-AC4) > T01 (660-720) returns {} [true] 2ms
+   ✓ canBook: case table (AC1-AC4) > T02 (540-570) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T03 (720-720) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T04 (750-720) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T05 (1380-1441) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T06 (720-840) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > T07 (720-841) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T08 (570-600) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > T09 (630-690) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T10 (570-690) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T11 (615-645) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T12 (600-660) returns {} [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T13 (660-720) returns { blocked: true } [false] 0ms
+   ✓ canBook: case table (AC1-AC4) > T14 (630-690) returns { bookings: [] } [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > X1 (541-600) returns {} [true] 0ms
+   ✓ canBook: case table (AC1-AC4) > X2 (1320-1440) returns {} [true] 0ms
+   ✓ canBook: AC5 - decision does not change booking data > returns true for an available request and leaves bookings byte-for-byte equal 2ms
+   ✓ canBook: AC5 - decision does not change booking data > leaves bookings unchanged for an unavailable request too 0ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  14:56:44
+   Duration  2.64s (transform 282ms, setup 0ms, collect 73ms, tests 7ms, environment 0ms, prepare 2.30s)
+
+The test suite:
+
+
+import { describe, it, expect } from "vitest";
+import { canBook } from "../src/booking";
+
+type Booking = { start: number; end: number };
+
+// Fresh fixture for every call. No shared mutable state between tests.
+function makeInput(
+  overrides: Partial<{
+    start: number;
+    end: number;
+    now: number;
+    blocked: boolean;
+    bookings: Booking[];
+  }> = {}
+) {
+  return {
+    start: 0,
+    end: 0,
+    now: 540,
+    blocked: false,
+    bookings: [{ start: 600, end: 660 }],
+    ...overrides,
+  };
+}
+
+describe("canBook: case table (AC1-AC4)", () => {
+  // [id, start, end, overrides, expected, ac]
+  const cases: Array<[string, number, number, Record<string, unknown>, boolean, string]> = [
+    ["T01", 660, 720, {}, true, "AC4"],
+    ["T02", 540, 570, {}, false, "AC1"],
+    ["T03", 720, 720, {}, false, "AC1"],
+    ["T04", 750, 720, {}, false, "AC1"],
+    ["T05", 1380, 1441, {}, false, "AC1"],
+    ["T06", 720, 840, {}, true, "AC2"],
+    ["T07", 720, 841, {}, false, "AC2"],
+    ["T08", 570, 600, {}, true, "AC4"],
+    ["T09", 630, 690, {}, false, "AC4"],
+    ["T10", 570, 690, {}, false, "AC4"],
+    ["T11", 615, 645, {}, false, "AC4"],
+    ["T12", 600, 660, {}, false, "AC4"],
+    ["T13", 660, 720, { blocked: true }, false, "AC3"],
+    ["T14", 630, 690, { bookings: [] }, true, "AC4"],
+    ["X1", 541, 600, {}, true, "AC1"],
+    ["X2", 1320, 1440, {}, true, "AC1"],
+  ];
+
+  it.each(cases)("%s (%i-%i) returns %s [%s]", (_id, start, end, overrides, expected) => {
+    const input = makeInput({ start, end, ...overrides });
+    const result = canBook(input);
+    expect(result).toBe(expected);
+  });
+});
+
+describe("canBook: AC5 - decision does not change booking data", () => {
+  it("returns true for an available request and leaves bookings byte-for-byte equal", () => {
+    const bookings: Booking[] = [
+      { start: 600, end: 660 },
+      { start: 780, end: 840 },
+    ];
+    const before = structuredClone(bookings);
+    const input = makeInput({ start: 660, end: 720, bookings });
+
+    const result = canBook(input);
+
+    expect(result).toBe(true);
+    expect(input.bookings).toEqual(before);
+    expect(input.bookings).toHaveLength(before.length);
+    expect(input.bookings[0]).toBe(bookings[0]); // same object, not replaced
+  });
+
+  it("leaves bookings unchanged for an unavailable request too", () => {
+    const bookings: Booking[] = [{ start: 600, end: 660 }];
+    const before = structuredClone(bookings);
+    const input = makeInput({ start: 630, end: 690, bookings });
+
+    expect(canBook(input)).toBe(false);
+    expect(input.bookings).toEqual(before);
+  });
+}); 
+
+
+Our case table:
+AC1: Accept a candidate interval only when 0 ≤ start < end ≤ 1440 and start is after the supplied current time.
+AC2: Reject a booking longer than 120 minutes.
+AC3: Reject the request when the selected room is blocked.
+AC4: Reject any interval that overlaps an existing booking; touching endpoints are allowed.
+AC5: Show a clear Available / Unavailable decision without changing the existing booking data.
+AC6: The page remains usable at desktop and narrow/mobile width and gives understandable validation feedback.
+
+Default fixture: now = 540, blocked = false, bookings = [{ start: 600, end: 660 }], fresh for every test.
+
+| ID | Candidate / changed input | Expected | AC |
+| --- | --- | --- | --- |
+| T01 | 660–720 (touching after) | true | AC4 |
+| T02 | 540–570 (starts now) | false | AC1 |
+| T03 | 720–720 (zero duration) | false | AC1 |
+| T04 | 750–720 (reversed) | false | AC1 |
+| T05 | 1380–1441 (past day end) | false | AC1 |
+| T06 | 720–840 (120 minutes) | true | AC2 |
+| T07 | 720–841 (121 minutes) | false | AC2 |
+| T08 | 570–600 (touching before) | true | AC4 |
+| T09 | 630–690 (partial overlap) | false | AC4 |
+| T10 | 570–690 (contains booking) | false | AC4 |
+| T11 | 615–645 (inside booking) | false | AC4 |
+| T12 | 600–660 (identical interval) | false | AC4 |
+| T13 | 660–720, blocked = true | false | AC3 |
+| T14 | 630–690, bookings = [] | true | AC4 |
+| AC5 | an Available request — the bookings after the call equal the bookings before | true, data unchanged | AC5 |
+| X1 | 541–600 (one minute after now, touching the booking) | true | AC1 |
+| X2 | 1320–1440 (ends exactly at the end of the day) | true | AC1 |
+
+
+
+## Review findings
+
+The run output shows all 18 tests passing, so no failures point to implementation bugs. I checked every expected value against AC1–AC4 and the case table, and all 16 rows are correct. The problems are in test quality and coverage.
+
+**Test repairs**
+
+1. **Wrong import path and file location.** The output shows the file is `src/booking.test.ts`, but it imports `"../src/booking"`. That resolves to the same module only by accident. Changing the file or folder would break it. Use `"./booking"`. My earlier advice to use `tests/` did not match your layout.
+2. **Unreadable test names.** `%s` prints the override object, so names read `returns {}` and `returns { blocked: true }`. The AC reference is also dropped from the name. Use object rows with `$id`, `$ac`, `$start`, `$end` interpolation so each name shows what is being checked.
+3. **Shared fixtures in the case table.** The `bookings: []` and `{ blocked: true }` overrides are created once at module load. That conflicts with "fresh fixtures for every test." Overrides are now factory functions that build new objects per run.
+4. **Tautological AC5 assertion.** `expect(input.bookings[0]).toBe(bookings[0])` always passes, because `input.bookings` is the same array as `bookings`. It tests nothing about the function. I also overstated the earlier claim: `toEqual` is structural, not "byte-for-byte."
+5. **Weak AC5 check.** A structural compare after the call can miss in-place mutations that cancel out, and it does not stop them. Deep-freezing the bookings means any mutation throws in strict ES module code, so the test fails on the mutation itself.
+6. **Loose typing.** `Record<string, unknown>` overrides are not checked against the function's input type. Use `Partial<Input>` derived from `Parameters<typeof canBook>[0]`, so a type error surfaces under `tsc`.
+7. **Unused `ac` column.** The sixth tuple element was never used. It now appears in the test name and mapping.
+
+**Coverage gaps (new boundary tests, none of which fail on the current code)**
+
+- **AC1 lower bound (start = 0).** Only the upper bound (end = 1440) was tested. Without a test for start = 0, a bug such as `start > 0` would not be caught. `now` is set to -1 so this case is not rejected by the "after now" rule.
+- **AC1 negative start.** `start = -1` checks that the `start < 0` branch is reached and not masked by the `now` check.
+- **AC4 multiple bookings.** Only one booking existed. A bug that checked only `bookings[0]` would go unnoticed. Added a candidate that overlaps only the second booking.
+- **AC4 gap between bookings.** A candidate that fits exactly between two bookings, touching both, checks that touching is allowed on both sides.
+- **AC4 one-minute overlap.** 659–661 overlaps by one minute at the end. This catches off-by-one errors that T09–T12 might miss.
+- **AC3 independence.** Blocked with no bookings checks that the blocked rule works on its own and is not depending on the overlap check.
+- **NaN input.** The code has a NaN guard that no test covered. This is marked as defensive, since it is not in the ACs.
+
+**Not changed**
+
+- **Incorrect expectations:** none found. Every expected value matches AC1–AC4.
+- **Duplicates:** T08/X1 and T11/T12 test different sides or edges, so they are not true duplicates and were kept.
+- **AC5 UI labels and AC6:** still not testable through `canBook`. They need component or end-to-end tests. The file below does not claim to cover them.
+
+## Implementation fixes
+
+None. No test fails, and the new boundary cases (start = 0, negative start, NaN, multiple bookings, gap, one-minute overlap, blocked without bookings) all match the current `canBook` logic when traced by hand. Do not change `src/booking.ts` for these tests.
+
+## Test file: `src/booking.test.ts`
+
+import { describe, it, expect } from "vitest";
+import { canBook } from "./booking";
+
+type Input = Parameters<typeof canBook>[0];
+
+// Fresh input for every call. Overrides are merged, never shared.
+function makeInput(overrides: Partial<Input> = {}): Input {
+  return {
+    start: 0,
+    end: 0,
+    now: 540,
+    blocked: false,
+    bookings: [{ start: 600, end: 660 }],
+    ...overrides,
+  };
+}
+
+// Deep-freeze so any in-place mutation throws (ES modules run in strict mode).
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object") {
+    for (const v of Object.values(value as object)) deepFreeze(v);
+    Object.freeze(value);
+  }
+  return value;
+}
+
+type Row = {
+  id: string;
+  ac: string;
+  start: number;
+  end: number;
+  // Factory, so every run gets fresh objects.
+  overrides?: () => Partial<Input>;
+  expected: boolean;
+};
+
+const rows: Row[] = [
+  // Case table
+  { id: "T01", ac: "AC4", start: 660, end: 720, expected: true },
+  { id: "T02", ac: "AC1", start: 540, end: 570, expected: false },
+  { id: "T03", ac: "AC1", start: 720, end: 720, expected: false },
+  { id: "T04", ac: "AC1", start: 750, end: 720, expected: false },
+  { id: "T05", ac: "AC1", start: 1380, end: 1441, expected: false },
+  { id: "T06", ac: "AC2", start: 720, end: 840, expected: true },
+  { id: "T07", ac: "AC2", start: 720, end: 841, expected: false },
+  { id: "T08", ac: "AC4", start: 570, end: 600, expected: true },
+  { id: "T09", ac: "AC4", start: 630, end: 690, expected: false },
+  { id: "T10", ac: "AC4", start: 570, end: 690, expected: false },
+  { id: "T11", ac: "AC4", start: 615, end: 645, expected: false },
+  { id: "T12", ac: "AC4", start: 600, end: 660, expected: false },
+  { id: "T13", ac: "AC3", start: 660, end: 720, overrides: () => ({ blocked: true }), expected: false },
+  { id: "T14", ac: "AC4", start: 630, end: 690, overrides: () => ({ bookings: [] }), expected: true },
+  { id: "X1", ac: "AC1", start: 541, end: 600, expected: true },
+  { id: "X2", ac: "AC1", start: 1320, end: 1440, expected: true },
+
+  // Added boundary cases
+  { id: "B01", ac: "AC1", start: 0, end: 60, overrides: () => ({ now: -1 }), expected: true },
+  { id: "B02", ac: "AC1", start: -1, end: 60, overrides: () => ({ now: -2 }), expected: false },
+  {
+    id: "B03", ac: "AC4", start: 740, end: 800,
+    overrides: () => ({ bookings: [{ start: 600, end: 660 }, { start: 700, end: 760 }] }),
+    expected: false,
+  },
+  {
+    id: "B04", ac: "AC4", start: 660, end: 700,
+    overrides: () => ({ bookings: [{ start: 600, end: 660 }, { start: 700, end: 760 }] }),
+    expected: true,
+  },
+  { id: "B05", ac: "AC4", start: 659, end: 661, expected: false },
+  { id: "B06", ac: "AC3", start: 630, end: 690, overrides: () => ({ blocked: true, bookings: [] }), expected: false },
+  { id: "B07", ac: "AC1", start: NaN, end: 600, expected: false },
+];
+
+describe("canBook: case table and boundaries (AC1-AC4)", () => {
+  it.each(rows)(
+    "$id ($ac) $start-$end expected $expected",
+    ({ start, end, overrides, expected }) => {
+      const input = makeInput({ start, end, ...(overrides?.() ?? {}) });
+      expect(canBook(input)).toBe(expected);
+    }
+  );
+});
+
+describe("canBook: AC5 - decision does not change booking data", () => {
+  it("returns a boolean true for an available request and leaves frozen bookings unchanged", () => {
+    const bookings = deepFreeze([
+      { start: 600, end: 660 },
+      { start: 780, end: 840 },
+    ]);
+    const snapshot = JSON.parse(JSON.stringify(bookings));
+
+    const result = canBook(makeInput({ start: 660, end: 720, bookings }));
+
+    expect(typeof result).toBe("boolean");
+    expect(result).toBe(true);
+    expect(bookings).toEqual(snapshot);
+  });
+
+  it("returns a boolean false for an unavailable request and leaves frozen bookings unchanged", () => {
+    const bookings = deepFreeze([{ start: 600, end: 660 }]);
+    const snapshot = JSON.parse(JSON.stringify(bookings));
+
+    const result = canBook(makeInput({ start: 630, end: 690, bookings }));
+
+    expect(typeof result).toBe("boolean");
+    expect(result).toBe(false);
+    expect(bookings).toEqual(snapshot);
+  });
+});
+
+## Run command
+
+npx vitest run src/booking.test.ts
+
+Or `npx vitest run` for the whole project.
+
+## AC mapping
+
+| AC | Covered by | Notes |
+| --- | --- | --- |
+| AC1 (bounds, start after now) | T02, T03, T04, T05, X1, X2, B01, B02, B07 | Lower bound (start = 0), negative start, and NaN are now covered. |
+| AC2 (max 120 minutes) | T06, T07 | Covered. |
+| AC3 (blocked room) | T13, B06 | B06 confirms the blocked rule works without any overlap. |
+| AC4 (overlap, touching allowed) | T01, T08–T12, T14, B03, B04, B05 | Covers multiple bookings, gaps between bookings, and a one-minute overlap. |
+| AC5 (decision, data unchanged) | AC5 block (two tests) | Frozen data makes mutation throw. The visible Available/Unavailable label is UI and is **not** covered. |
+| AC6 (desktop/mobile, validation feedback) | None | Needs component tests (for example Testing Library) or end-to-end tests (for example Playwright at ~1280px and ~375px). |
+
+## Open questions
+
+1. **Negative `now` in B01 and B02.** These use `now = -1` and `-2` to isolate the lower bound. Confirm that a negative current time is valid input in your domain. If not, the lower-bound test should use another method of isolating the boundary.
+2. **NaN behavior (B07).** The code returns false for NaN, but no AC mentions it. Confirm whether this should be a requirement or just defensive behavior.
+3. **AC5 visual label and AC6.** Still unspecified (see the earlier list). These cannot be tested until they are defined.
 ```
 
 ### 6.3 The final run
@@ -249,7 +598,7 @@ change and after restoring the correct code from section 7. Every test must pass
 is still open, leave its test failing and explain it in 9.1.
 
 ```text
-(paste here)
+
 ```
 
 ---
