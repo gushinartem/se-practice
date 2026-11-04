@@ -15,5 +15,5 @@ export const SAMPLE_BOOKINGS: Booking[] = [
   { id: "b4", roomId: "r2", start: 900, end: 960, title: "Open Hack Session", owner: "CS Club" },
   { id: "b5", roomId: "r3", start: 480, end: 540, title: "Guest Lecture", owner: "Events Team" },
   { id: "b6", roomId: "r3", start: 1020, end: 1080, title: "Symposium Prep", owner: "Events Team" },
-  { id: "b7", roomId: "r5", start: 630, end: 690, title: "Design Critique", owner: "Studio Lead" },
+  { id: "b7", roomId: "r5", start: 600, end: 660, title: "Design Critique", owner: "Studio Lead" },
 ];

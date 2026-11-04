@@ -684,11 +684,11 @@ screenshot of each as `evidence/ui-1.png` … `evidence/ui-5.png`. Take **ui-4 a
 
 | # | Action | Expected observation | AC | What I observed | Pass / Fail / Not testable |
 | --- | --- | --- | --- | --- | --- |
-| U1 | Check 11:00–12:00, unblocked | Available, with the fixed sample booking | AC5 | | Pass / Fail / Not testable |
-| U2 | Enable blocked, then check again | Unavailable replaces the earlier result | AC3, AC5 | | Pass / Fail / Not testable |
-| U3 | Clear a required input and submit | Understandable validation feedback | AC6 | | Pass / Fail / Not testable |
-| U4 | Use a narrow (phone) width | Controls and result remain usable | AC6 | | Pass / Fail / Not testable |
-| U5 | Repeat the checks on the same data | Existing bookings remain unchanged | AC5 | | Pass / Fail / Not testable |
+| U1 | Check 11:00–12:00, unblocked | Available, with the fixed sample booking | AC5 | With "Campus now" 09:00 and a room that has the 10:00–11:00 booking, I entered 11:00–12:00. A green card showed "Available" with the message that the room is free from 11:00 to 12:00. The schedule showed the grey 10:00–11:00 booking. | Pass |
+| U2 | Enable blocked, then check again | Unavailable replaces the earlier result | AC3, AC5 | The page has no control to block a room. Blocked rooms show a "Blocked" badge and their card is disabled, so I could not select one and check it. Because of this I could not make an Available result switch to Unavailable through a blocked room. The blocked rule is covered by the unit tests T13 and B04. | Not testable |
+| U3 | Clear a required input and submit | Understandable validation feedback | AC6 | The page has no submit button; it checks while I type. When I cleared the start or end time, the result disappeared and a grey hint appeared: "Pick a room and enter a start and end time to see availability." With a room not selected, a red card said "Select a room to check." Invalid requests also showed a red card with the reasons. | Pass |
+| U4 | Use a narrow (phone) width | Controls and result remain usable | AC6 | At about 375 px in portrait, the room cards, the two time fields and the green/red verdict card stayed readable and usable, with no sideways scrolling. | Pass |
+| U5 | Repeat the checks on the same data | Existing bookings remain unchanged | AC5 | I repeated the check several times, including an Available and an Unavailable one. The "N booked" count on the room card and the grey booking blocks in the schedule stayed the same each time. | Pass |
 
 ---
 
