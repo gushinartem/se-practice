@@ -49,23 +49,23 @@ for every test. **The Expected column comes from AC1–AC4, never from the code.
 
 | ID | Candidate / changed input | Expected | AC | Reason (in your words) |
 | --- | --- | --- | --- | --- |
-| T01 | 660–720 (touching after) | true | AC4 | |
-| T02 | 540–570 (starts now) | false | AC1 | |
-| T03 | 720–720 (zero duration) | false | AC1 | |
-| T04 | 750–720 (reversed) | false | AC1 | |
-| T05 | 1380–1441 (past day end) | false | AC1 | |
-| T06 | 720–840 (120 minutes) | true | AC2 | |
-| T07 | 720–841 (121 minutes) | false | AC2 | |
-| T08 | 570–600 (touching before) | true | AC4 | |
-| T09 | 630–690 (partial overlap) | false | AC4 | |
-| T10 | 570–690 (contains booking) | false | AC4 | |
-| T11 | 615–645 (inside booking) | false | AC4 | |
-| T12 | 600–660 (identical interval) | false | AC4 | |
-| T13 | 660–720, blocked = true | false | AC3 | |
-| T14 | 630–690, bookings = [] | true | AC4 | |
-| AC5 | an Available request — the bookings after the call equal the bookings before | true, data unchanged | AC5 | |
-| X1 | | | | |
-| X2 | | | | |
+| T01 | 660–720 (touching after) | true | AC4 | The booking is 600–660 and its end 660 is excluded, so my interval starting at 660 only touches it and shares no minute. Start 660 is after now (540) and the length is 60 minutes, so nothing rejects it. |
+| T02 | 540–570 (starts now) | false | AC1 | Start 540 equals now (540). AC1 needs the start strictly after the current time, so a start equal to now is rejected. |
+| T03 | 720–720 (zero duration) | false | AC1 | Start and end are both 720, so the duration is 0 minutes. AC1 needs start < end, which is not true here. |
+| T04 | 750–720 (reversed) | false | AC1 | The start 750 is later than the end 720, so the interval runs backwards. AC1 needs start < end. |
+| T05 | 1380–1441 (past day end) | false | AC1 | End 1441 is one minute past the end of the day (1440). AC1 needs end ≤ 1440. The length is only 61 minutes and nothing overlaps, so only the day limit rejects it. |
+| T06 | 720–840 (120 minutes) | true | AC2 | 840 − 720 = 120 minutes exactly. AC2 rejects only bookings longer than 120, so exactly 120 is allowed. It is also after now and after the existing booking. |
+| T07 | 720–841 (121 minutes) | false | AC2 | 841 − 720 = 121 minutes, one minute over the AC2 limit of 120, so it is rejected. Everything else is valid. |
+| T08 | 570–600 (touching before) | true | AC4 | My interval ends at 600, exactly where the booking 600–660 starts, so they only touch and share no minute. Start 570 is after now (540) and the length is 30 minutes. |
+| T09 | 630–690 (partial overlap) | false | AC4 | My interval shares the minutes 630–660 with the booking 600–660. That is a real overlap, so AC4 rejects it. |
+| T10 | 570–690 (contains booking) | false | AC4 | My interval starts before the booking and ends after it, so it contains the whole 600–660. Its length is 120, so AC2 is fine and only the overlap rule rejects it. |
+| T11 | 615–645 (inside booking) | false | AC4 | 615–645 lies completely inside 600–660. Any shared minutes count as an overlap, so AC4 rejects it. |
+| T12 | 600–660 (identical interval) | false | AC4 | The interval is exactly the same as the existing booking, so every minute overlaps. AC4 rejects it. |
+| T13 | 660–720, blocked = true | false | AC3 | The times are the same as in T01, which is valid, so the only change is that the room is blocked. AC3 rejects any request for a blocked room. |
+| T14 | 630–690, bookings = [] | true | AC4 | The same times as T09, which was rejected only because of the booking. With no bookings nothing can overlap, and the rest is valid (after now, 60 minutes, inside the day), so it is allowed. |
+| AC5 | an Available request — the bookings after the call equal the bookings before | true, data unchanged | AC5 | I call canBook with an Available request (660–720) and compare the bookings array with a copy taken before the call. A decision must not change the booking data, so both must be equal. |
+| X1 | 541–600 (one minute after now, touching the booking) | true | AC1 | Start 541 is the first minute after now (540), which T02 only tests from the rejecting side. End 600 only touches the booking, and the length is 59 minutes, so it is allowed. |
+| X2 | 1320–1440 (ends exactly at the end of the day) | true | AC1 | End 1440 is the last allowed minute because AC1 says end ≤ 1440, which T05 only tests from the rejecting side (1441). The length is exactly 120 minutes (AC2 allows it) and nothing overlaps, so it is allowed. |
 
 X1 and X2 are **your own two cases**: a boundary or a state that T01–T14 do not reach. Fill all
 five columns.
