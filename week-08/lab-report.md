@@ -419,18 +419,21 @@ One row per defect. At least **BUG-A and BUG-B**. "Suspected cause" is your hypo
 
 **The checks from the deck, before you zip it.** Answer each one yes / no:
 
-| Check | yes / no |
-| --- | --- |
-| The file is plain UTF-8 text, named exactly `SKILL.md` (not `SKILL.md.txt`) | yes / no |
-| The first and the closing YAML delimiter are exactly three hyphens: `---` | yes / no |
-| `name` is lowercase with hyphens, and `description` says WHEN to use it | yes / no |
-| I read the whole file once: no passwords, API keys or private student data | yes / no |
+| Check | yes / no | 
+| ----- | ----- | 
+| The file is plain UTF-8 text, named exactly `SKILL.md` (not `SKILL.md.txt`) | yes | 
+| The first and the closing YAML delimiter are exactly three hyphens: `---` | yes | 
+| `name` is lowercase with hyphens, and `description` says WHEN to use it | yes | 
+| I read the whole file once: no passwords, API keys or private student data | yes |
 
 **The contents of `skills/bug-detector.zip`.** Paste the listing (Windows: open the ZIP and copy
 the paths; macOS/Linux: `unzip -l skills/bug-detector.zip`):
 
 ```text
-(paste here)
+D:\se-practice\week-08\skills>tar -tf bug-detector.zip
+bug-detector/
+bug-detector/.gitkeep
+bug-detector/SKILL.md
 ```
 
 **Installation.** Where you uploaded it, what the upload said, and whether a new chat showed the
@@ -438,7 +441,7 @@ skill as enabled. If upload was not available, write `prompt-only simulation` an
 Screenshot of the result: `evidence/install.png`.
 
 <!-- Write below this line -->
-
+I uploaded `skills/bug-detector.zip` in Claude on the web (claude.ai). After the upload, the skill `bug-detector` is available in a new chat: I can select it from the "+" menu next to the message box, so it was added and can be enabled per chat. I did not need to change any file to make the upload work. Screenshot of the result: `evidence/install.png`.
 ---
 
 ## 5. Task 4 — without the skill
