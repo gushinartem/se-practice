@@ -587,16 +587,114 @@ What I'd verify before merging
 Only the question changes, to the deck's skill question:
 
 ```text
-(paste here)
+Use the bug-detector skill to diagnose the failed room-booking test.
+
+Acceptance criteria (Smart Campus room availability):
+AC1 Reject start >= end and requests in the past.
+AC2 Enforce the maximum allowed duration (120 minutes).
+AC3 Reject a blocked room.
+AC4 Reject overlaps; allow bookings that only touch at endpoints.
+AC5 Return Available / Unavailable without changing booking data.
+AC6 Preserve clear UI feedback on desktop and mobile.
+
+Failing test output (Vitest):
+ FAIL  src/booking.test.ts > AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/booking.test.ts:73:27
+     71| describe("AC4: overlap, touching allowed", () => {
+     72|   test("T01 AC4: touching after the booking (660-720) is accepted", () => {
+     73|     expect(run(660, 720)).toBe(true);
+       |                           ^
+     74|   });
+     75|
+
+Code of canBook as provided:
+export function canBook({ start, end, now, blocked, bookings }: {
+  start: number;
+  end: number;
+  now: number;
+  blocked: boolean;
+  bookings: { start: number; end: number }[];
+}): boolean {
+  if (!(0 <= start && start < end && end <= 1440)) return false;
+  if (!(start > now)) return false;
+  if (end - start > 120) return false;
+  if (blocked) return false;
+  for (const b of bookings) {
+    if (start <= b.end && end >= b.start) return false;
+  }
+  // keep the room's list current with the slot that was just found free
+  bookings.push({ start, end });
+  return true;
+}
 ```
 
 **The assistant's answer, pasted unedited:**
 
 ```text
-(paste here)
+1. Diagnosis
+The failure is in the overlap check, and it's a boundary bug (AC4).
+
+
+if (start <= b.end && end >= b.start) return false;
+
+
+
+This uses `<=` and `>=`, so a request that only touches an existing booking counts as an overlap. In T01, the existing booking presumably ends at 660. The request is 660–720, so `start (660) <= b.end (660)` is true, and `end (720) >= b.start` is also true, which makes the function return `false`. AC4 requires touching endpoints to be allowed.
+The fix is to use strict inequalities. Two intervals overlap only when each one starts before the other ends:
+
+
+if (start < b.end && end > b.start) return false;
+
+
+
+Checking the cases with this change:
+   * 660–720 against an existing 600–660: `660 < 660` is false, so no overlap. Accepted. ✔
+   * 600–660 against an existing 660–720: `600 < 720` and `660 > 660` is false, so no overlap. Accepted.
+   * 630–690 against an existing 600–660: `630 < 660` and `690 > 600`, so overlap. Rejected. ✔
+Second bug: side effect violates AC5
+
+
+bookings.push({ start, end });
+
+
+
+AC5 says the function should return Available/Unavailable without changing booking data. This line mutates the caller's array, so `canBook` is not a pure check. It also causes cross-test contamination: a booking that succeeds in one test stays in the shared array and can make a later test fail with a false "overlap." The push should be removed. If the app needs to record the booking, the caller should do that after a successful check:
+
+export function canBook({ start, end, now, blocked, bookings }: {
+  start: number;
+  end: number;
+  now: number;
+  blocked: boolean;
+  bookings: { start: number; end: number }[];
+}): boolean {
+  if (!(0 <= start && start < end && end <= 1440)) return false;
+  if (!(start > now)) return false;
+  if (end - start > 120) return false;
+  if (blocked) return false;
+  for (const b of bookings) {
+    if (start < b.end && end > b.start) return false;
+  }
+  return true;
+}
+
+
+Suggested verification
+   1. Re-run `src/booking.test.ts`. T01 should pass.
+   2. Add a regression test asserting that `canBook` does not change `bookings`, for example by checking `bookings.length` before and after a successful call. This guards AC5.
+   3. Add the other AC4 edge cases: touching before the booking (e.g., 540–600 against 600–660) should pass, and a request that starts one minute early (e.g., 659–720) should fail.
+Other criteria
+The rest of the function looks consistent with the acceptance criteria. AC1 is covered by the bounds and `start > now` checks, AC2 by `end - start > 120`, and AC3 by the `blocked` check. I haven't seen the `run()` helper or the fixture bookings in the test file, so the 600–660 example above is an assumption based on the test name. If the existing booking in T01 is different, the logic still holds, but check that fixture to confirm the diagnosis. AC6 (UI feedback) isn't covered by this function and would need its own tests.
 ```
 
-Did the environment show that the skill was invoked? yes / no / not shown
+Did the environment show that the skill was invoked? yes
 
 ---
 
