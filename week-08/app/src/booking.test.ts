@@ -1,4 +1,4 @@
-import { describe, test, expect } from "vitest";
+import { describe,it, test, expect } from "vitest";
 import { canBook } from "./booking";
 
 // Fresh input on every call. Default fixture: now = 540 (09:00),
@@ -151,6 +151,27 @@ describe("AC5: the decision does not change the booking data", () => {
     });
 
     expect(result).toBe(false);
+    expect(bookings).toEqual(before);
+  });
+});
+
+
+
+describe("BUG regression tests (Week 08)", () => {
+  it("BUG-A AC4: a request touching bookings on both sides (660-720) is Available", () => {
+    const bookings = [
+      { start: 600, end: 660 },
+      { start: 720, end: 780 },
+    ];
+    const result = canBook({ start: 660, end: 720, now: 540, blocked: false, bookings });
+    expect(result).toBe(true);
+  });
+
+  it("BUG-B AC5: an Available request that touches nothing (720-780) leaves bookings unchanged", () => {
+    const bookings = [{ start: 600, end: 660 }];
+    const before = JSON.parse(JSON.stringify(bookings));
+    const result = canBook({ start: 720, end: 780, now: 540, blocked: false, bookings });
+    expect(result).toBe(true);
     expect(bookings).toEqual(before);
   });
 });
