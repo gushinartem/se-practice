@@ -727,7 +727,167 @@ Rerun the test that was failing, then the full suite.
 The change as a diff (`git diff`, or the old and the new line), then the real run:
 
 ```text
-(paste here)
+D:\se-practice\week-08>git diff app/src/booking.ts
+diff --git a/week-08/app/src/booking.ts b/week-08/app/src/booking.ts
+index 39608e3..586cf44 100644
+--- a/week-08/app/src/booking.ts
++++ b/week-08/app/src/booking.ts
+@@ -10,7 +10,7 @@ export function canBook({ start, end, now, blocked, bookings }: {
+   if (end - start > 120) return false;
+   if (blocked) return false;
+   for (const b of bookings) {
+-    if (start <= b.end && end >= b.start) return false;
++    if (start < b.end && end > b.start) return false;^M
+   }
+   // keep the room's list current with the slot that was just found free
+   bookings.push({ start, end });
+
+D:\se-practice\week-08>cd ap
+The system cannot find the path specified.
+
+D:\se-practice\week-08>npx vitest run -t "BUG-A"
+Need to install the following packages:
+vitest@5.1.0
+Ok to proceed? (y) y
+
+ RUN  v5.1.0 D:/se-practice/week-08
+
+ ✓ app/src/booking.test.ts (24 tests | 23 skipped) 2ms
+   ↓ AC1: interval bounds and start after now (6)
+     ↓ T02 AC1: starts now (540-570) is rejected
+     ↓ T03 AC1: zero duration (720-720) is rejected
+     ↓ T04 AC1: reversed interval (750-720) is rejected
+     ↓ T05 AC1: past the end of the day (1380-1441) is rejected
+     ↓ X1 AC1: first minute after now, touching the booking (541-600) is accepted
+     ↓ X2 AC1: ends exactly at the end of the day (1320-1440) is accepted
+   ↓ AC2: maximum 120 minutes (2)
+     ↓ T06 AC2: exactly 120 minutes (720-840) is accepted
+     ↓ T07 AC2: 121 minutes (720-841) is rejected
+   ↓ AC3: blocked room (2)
+     ↓ T13 AC3: blocked room (660-720) is rejected
+     ↓ B04 AC3: blocked room with no bookings (630-690) is rejected
+   ↓ AC4: overlap, touching allowed (10)
+     ↓ T01 AC4: touching after the booking (660-720) is accepted
+     ↓ T08 AC4: touching before the booking (570-600) is accepted
+     ↓ T09 AC4: partial overlap (630-690) is rejected
+     ↓ T10 AC4: interval contains the booking (570-690) is rejected
+     ↓ T11 AC4: interval inside the booking (615-645) is rejected
+     ↓ T12 AC4: identical interval (600-660) is rejected
+     ↓ T14 AC4: no bookings (630-690) is accepted
+     ↓ B01 AC4: overlaps only the second of two bookings (740-800) is rejected
+     ↓ B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted
+     ↓ B03 AC4: overlaps the booking by one minute (659-661) is rejected
+   ↓ AC5: the decision does not change the booking data (2)
+     ↓ AC5: an Available request leaves the bookings unchanged
+     ↓ B05 AC5: an Unavailable request also leaves the bookings unchanged
+   ✓ BUG regression tests (Week 08) (2)
+     ✓ BUG-A AC4: a request touching bookings on both sides (660-720) is Available 1ms
+     ↓ BUG-B AC5: an Available request that touches nothing (720-780) leaves bookings unchanged
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 23 skipped (24)
+   Start at  22:19:03
+   Duration  191ms (transform 55%, import 31%, worker 9%, tests 4%)
+
+
+D:\se-practice\week-08>npx vitest run
+
+ RUN  v5.1.0 D:/se-practice/week-08
+
+ ❯ app/src/booking.test.ts (24 tests | 2 failed) 11ms
+   ✓ AC1: interval bounds and start after now (6)
+     ✓ T02 AC1: starts now (540-570) is rejected 1ms
+     ✓ T03 AC1: zero duration (720-720) is rejected 0ms
+     ✓ T04 AC1: reversed interval (750-720) is rejected 0ms
+     ✓ T05 AC1: past the end of the day (1380-1441) is rejected 0ms
+     ✓ X1 AC1: first minute after now, touching the booking (541-600) is accepted 0ms
+     ✓ X2 AC1: ends exactly at the end of the day (1320-1440) is accepted 0ms
+   ✓ AC2: maximum 120 minutes (2)
+     ✓ T06 AC2: exactly 120 minutes (720-840) is accepted 0ms
+     ✓ T07 AC2: 121 minutes (720-841) is rejected 0ms
+   ✓ AC3: blocked room (2)
+     ✓ T13 AC3: blocked room (660-720) is rejected 0ms
+     ✓ B04 AC3: blocked room with no bookings (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed (10)
+     ✓ T01 AC4: touching after the booking (660-720) is accepted 0ms
+     ✓ T08 AC4: touching before the booking (570-600) is accepted 0ms
+     ✓ T09 AC4: partial overlap (630-690) is rejected 0ms
+     ✓ T10 AC4: interval contains the booking (570-690) is rejected 0ms
+     ✓ T11 AC4: interval inside the booking (615-645) is rejected 0ms
+     ✓ T12 AC4: identical interval (600-660) is rejected 0ms
+     ✓ T14 AC4: no bookings (630-690) is accepted 0ms
+     ✓ B01 AC4: overlaps only the second of two bookings (740-800) is rejected 0ms
+     ✓ B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted 0ms
+     ✓ B03 AC4: overlaps the booking by one minute (659-661) is rejected 0ms
+   ❯ AC5: the decision does not change the booking data (2)
+     × AC5: an Available request leaves the bookings unchanged 6ms
+     ✓ B05 AC5: an Unavailable request also leaves the bookings unchanged 0ms
+   ❯ BUG regression tests (Week 08) (2)
+     ✓ BUG-A AC4: a request touching bookings on both sides (660-720) is Available 0ms
+     × BUG-B AC5: an Available request that touches nothing (720-780) leaves bookings unchanged 1ms
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/src/booking.test.ts > AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged
+AssertionError: expected [ { start: 600, end: 660 }, …(2) ] to deeply equal [ { start: 600, end: 660 }, …(1) ]
+
+- Expected
++ Received
+
+@@ -5,6 +5,10 @@
+    },
+    {
+      "end": 840,
+      "start": 780,
+    },
++   {
++     "end": 720,
++     "start": 660,
++   },
+  ]
+
+ ❯ app/src/booking.test.ts:138:22
+    136|
+    137|     expect(result).toBe(true);
+    138|     expect(bookings).toEqual(before);
+       |                      ^
+    139|   });
+    140|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/src/booking.test.ts > BUG regression tests (Week 08) > BUG-B AC5: an Available request that touches nothing (720-780) leaves bookings unchanged
+AssertionError: expected [ { start: 600, end: 660 }, …(1) ] to deeply equal [ { start: 600, end: 660 } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "end": 660,
+      "start": 600,
+    },
++   {
++     "end": 780,
++     "start": 720,
++   },
+  ]
+
+ ❯ app/src/booking.test.ts:175:22
+    173|     const result = canBook({ start: 720, end: 780, now: 540, blocked: false, bookings });
+    174|     expect(result).toBe(true);
+    175|     expect(bookings).toEqual(before);
+       |                      ^
+    176|   });
+    177| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 22 passed (24)
+   Start at  22:19:09
+   Duration  201ms (import 43%, tests 25%, transform 19%, worker 12%)
 ```
 
 ### 8.2 The BUG-B patch and the final run
@@ -735,7 +895,64 @@ The change as a diff (`git diff`, or the old and the new line), then the real ru
 The change as a diff, then the real output of the **full** suite. Every test must pass.
 
 ```text
-(paste here)
+D:\se-practice>git diff app/src/booking.ts
+fatal: ambiguous argument 'app/src/booking.ts': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+
+D:\se-practice>cd week-08
+
+D:\se-practice\week-08>git diff app/src/booking.ts
+diff --git a/week-08/app/src/booking.ts b/week-08/app/src/booking.ts
+index 586cf44..510cbe5 100644
+--- a/week-08/app/src/booking.ts
++++ b/week-08/app/src/booking.ts
+@@ -12,7 +12,5 @@ export function canBook({ start, end, now, blocked, bookings }: {
+   for (const b of bookings) {
+     if (start < b.end && end > b.start) return false;
+   }
+-  // keep the room's list current with the slot that was just found free
+-  bookings.push({ start, end });
+   return true;
+ }
+\ No newline at end of file
+
+D:\se-practice\week-08>cd app
+
+D:\se-practice\week-08\app>npx vitest run
+
+ RUN  v3.2.7 D:/se-practice/week-08/app
+
+ ✓ src/booking.test.ts (24 tests) 4ms
+   ✓ AC1: interval bounds and start after now > T02 AC1: starts now (540-570) is rejected 1ms
+   ✓ AC1: interval bounds and start after now > T03 AC1: zero duration (720-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T04 AC1: reversed interval (750-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T05 AC1: past the end of the day (1380-1441) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > X1 AC1: first minute after now, touching the booking (541-600) is accepted 0ms
+   ✓ AC1: interval bounds and start after now > X2 AC1: ends exactly at the end of the day (1320-1440) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T06 AC2: exactly 120 minutes (720-840) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T07 AC2: 121 minutes (720-841) is rejected 0ms
+   ✓ AC3: blocked room > T13 AC3: blocked room (660-720) is rejected 0ms
+   ✓ AC3: blocked room > B04 AC3: blocked room with no bookings (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T08 AC4: touching before the booking (570-600) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T09 AC4: partial overlap (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T10 AC4: interval contains the booking (570-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T11 AC4: interval inside the booking (615-645) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T12 AC4: identical interval (600-660) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T14 AC4: no bookings (630-690) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B01 AC4: overlaps only the second of two bookings (740-800) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B03 AC4: overlaps the booking by one minute (659-661) is rejected 0ms
+   ✓ AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged 1ms
+   ✓ AC5: the decision does not change the booking data > B05 AC5: an Unavailable request also leaves the bookings unchanged 0ms
+   ✓ BUG regression tests (Week 08) > BUG-A AC4: a request touching bookings on both sides (660-720) is Available 0ms
+   ✓ BUG regression tests (Week 08) > BUG-B AC5: an Available request that touches nothing (720-780) leaves bookings unchanged 0ms
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  22:23:11
+   Duration  393ms (transform 34ms, setup 0ms, collect 44ms, tests 4ms, environment 0ms, prepare 87ms)
 ```
 
 ---
@@ -746,14 +963,14 @@ The change as a diff, then the real output of the **full** suite. Every test mus
 
 Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run is clean.
 
-| Check | Why it stays |
-| --- | --- |
-| | |
+| Check | Why it stays | 
+| ----- | ----- | 
+| none | The final checker run has no FAIL and no ERROR. |
 
 ### 9.2 One limitation of AI-assisted debugging
 
 <!-- Use something that actually happened in sections 5-8. 20 words or more. -->
--
+- AI-assisted debugging reasons only about the code and the test output it is shown, and it cannot run anything or see the rest of the project, so it can state unverified things as fact. Neither answer saw my `run()` helper or my other tests. Even so, the no-skill answer said its test T05 fails on the buggy code, but it passes there, because BUG-A rejects the request 660-720 before the `push` is reached. The skill answer said that a successful booking stays in a shared array and breaks later tests, but my fixtures are rebuilt on every call. Only running the tests showed what was true, above all my `BUG-B` test on a request that touches nothing (720-780).
 
 ---
 
@@ -768,3 +985,4 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
      visible after the BUG-A patch: the AC5 test had been failing for the wrong reason." -->
 
 <!-- Write your conclusion below this line -->
+The skill did not make the diagnosis better. Both answers, with and without bug-detector, found BUG-A and BUG-B from the same input, and the skill answer was shorter but ignored its own output format and gave no test code. Both also made claims my code did not support: one said T05 fails on the buggy code, but it passes because BUG-A rejects 660-720 first, and one described state leaking between tests, which my fresh fixtures prevent. The tests proved more than either answer: my BUG-B test (720-780) failed because bookings grew, and the suite went from 7 failures to 2 after the BUG-A fix and to 24 passes after the BUG-B fix. An AI's claim is a hypothesis until a test shows it.
