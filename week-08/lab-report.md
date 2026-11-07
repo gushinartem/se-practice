@@ -451,13 +451,132 @@ the same input you will use in section 6 (AC1–AC6, the failing test output, th
 `canBook`):
 
 ```text
-(paste here)
+Find the root cause of the failed room-booking test. Propose minimal patch and regression test. Do not edit code.
+
+Acceptance criteria (Smart Campus room availability):
+AC1 Reject start >= end and requests in the past.
+AC2 Enforce the maximum allowed duration (120 minutes).
+AC3 Reject a blocked room.
+AC4 Reject overlaps; allow bookings that only touch at endpoints.
+AC5 Return Available / Unavailable without changing booking data.
+AC6 Preserve clear UI feedback on desktop and mobile.
+
+Failing test output (Vitest):
+ FAIL  src/booking.test.ts > AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/booking.test.ts:73:27
+     71| describe("AC4: overlap, touching allowed", () => {
+     72|   test("T01 AC4: touching after the booking (660-720) is accepted", () => {
+     73|     expect(run(660, 720)).toBe(true);
+       |                           ^
+     74|   });
+     75|
+
+Code of canBook as provided:
+export function canBook({ start, end, now, blocked, bookings }: {
+  start: number;
+  end: number;
+  now: number;
+  blocked: boolean;
+  bookings: { start: number; end: number }[];
+}): boolean {
+  if (!(0 <= start && start < end && end <= 1440)) return false;
+  if (!(start > now)) return false;
+  if (end - start > 120) return false;
+  if (blocked) return false;
+  for (const b of bookings) {
+    if (start <= b.end && end >= b.start) return false;
+  }
+  // keep the room's list current with the slot that was just found free
+  bookings.push({ start, end });
+  return true;
+}
 ```
 
 **The assistant's answer, pasted unedited:**
 
 ```text
-(paste here)
+1. Root cause
+The overlap check in `canBook` uses non-strict comparisons:
+
+if (start <= b.end && end >= b.start) return false;
+
+
+These comparisons treat a shared endpoint as an overlap. Assuming the fixture has an existing booking of 600–660 (the test name implies one ends at 660; I haven't seen `run()` or the fixture), the failing call evaluates as:
+   * `660 <= 660` is true
+   * `720 >= 600` is true
+So the function returns `false` for a slot that only touches the existing booking at its end. AC4 requires that case to be allowed. The fix is to use half-open interval semantics, where `[start, end)` and `[b.start, b.end)` overlap only if each starts before the other ends:
+
+if (start < b.end && end > b.start) return false;
+
+The other checks (AC1 bounds and past times, AC2 max duration, AC3 blocked) look correct for this test and are not implicated.
+Related defect (AC5)
+The last lines of `canBook` call `bookings.push({ start, end })`. This mutates the caller's array on success, which violates AC5 ("return Available/Unavailable without changing booking data"). It isn't what causes this failure, but it can leak state between tests that share a fixture, and it should be fixed in the same change. It's a separate edit, so you can split it out if you want the patch strictly minimal. If the app needs to record the booking, that should happen in the caller after a successful check.
+Minimal patch (proposed, not applied)
+
+```diff
+-  for (const b of bookings) {
+-    if (start <= b.end && end >= b.start) return false;
+-  }
+-  // keep the room's list current with the slot that was just found free
+-  bookings.push({ start, end });
++  for (const b of bookings) {
++    if (start < b.end && end > b.start) return false;
++  }
+   return true;
+
+```
+
+If you keep the push for now, change only the comparison line to fix the failing test.
+Regression tests (proposed)
+
+```ts
+describe("AC4: overlap, touching allowed", () => {
+  const existing = [{ start: 600, end: 660 }];
+
+  test("T01 AC4: touching after the booking (660-720) is accepted", () => {
+    expect(canBook({ start: 660, end: 720, now: 0, blocked: false, bookings: [...existing] })).toBe(true);
+  });
+
+  test("T02 AC4: touching before the booking (540-600) is accepted", () => {
+    expect(canBook({ start: 540, end: 600, now: 0, blocked: false, bookings: [...existing] })).toBe(true);
+  });
+
+  test("T03 AC4: real overlap at the start edge (650-700) is rejected", () => {
+    expect(canBook({ start: 650, end: 700, now: 0, blocked: false, bookings: [...existing] })).toBe(false);
+  });
+
+  test("T04 AC4: booking fully inside an existing one is rejected", () => {
+    expect(canBook({ start: 610, end: 640, now: 0, blocked: false, bookings: [...existing] })).toBe(false);
+  });
+});
+
+describe("AC5: no mutation of booking data", () => {
+  test("T05 AC5: a successful check does not change the bookings list", () => {
+    const bookings = [{ start: 600, end: 660 }];
+    const before = JSON.stringify(bookings);
+    canBook({ start: 660, end: 720, now: 0, blocked: false, bookings });
+    expect(JSON.stringify(bookings)).toBe(before);
+  });
+});
+
+```
+
+Notes on the tests:
+   * Each test copies the fixture so the tests can't affect one another.
+   * T01 is the reported failure. T02 and T03 cover the other side of the boundary, so the fix can't swing too far and start rejecting valid bookings.
+   * T05 fails on the current code, since the push mutates the list. It only passes once the push is removed.
+   * I used `now: 0` as a placeholder. Adjust it to whatever `run()` passes so the AC1 past-time check isn't hiding anything.
+What I'd verify before merging
+   1. Confirm the fixture in `run()` has an existing booking ending at 660. If it's different, the reasoning above still holds, but the example values need adjusting.
+   2. Run the full `booking.test.ts` suite. If any test relied on the old inclusive behavior, that test was encoding the bug and should be corrected to match AC4.
 ```
 
 ---
