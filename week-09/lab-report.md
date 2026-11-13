@@ -128,44 +128,73 @@ For each request, paste the model's reply exactly, then judge it against the req
 ### R1
 
 ```text
-
+{"name": "check_room", "arguments": {"start": 600, "end": 660, "now": 540, "blocked": false, "bookings": [{"start": 660, "end": 720}]}}
 ```
 
 <!-- Match? If F3 failed, which argument differs, and who was wrong: the model or the request? -->
+F1, F2 and F3 all PASS. The model replied with one JSON object and nothing else, with the right tool name. Every argument matches the request:
 
+- `start` = 600 (10:00), `end` = 660 (11:00) and `now` = 540 (9:00), so all three conversions are correct.
+- `blocked` = false, taken from "It isn't blocked".
+- `bookings` = one booking from 660 to 720, which is the existing 11:00 to 12:00 booking.
+
+Nobody was wrong here: the request gave every value explicitly, and the model converted them correctly. The schema accepted the call, which only means the shape is right. The booking touches the requested slot at 660, so `canBook` would answer Available (AC4 allows touching), and that decision belongs to the function, not the schema.
 ### R2
 
 ```text
-
+{"name": "check_room", "arguments": {"start": 840, "end": 990, "now": 810, "blocked": true, "bookings": []}}
 ```
 
 <!-- Same. R2 is a call that SHOULD be made, although canBook will say Unavailable. Did the model refuse to call? -->
+F4, F5 and F6 all PASS. The model replied with one call to `check_room`, with valid arguments that match the request:
 
+- `start` = 840 (14:00), `end` = 990 (16:30) and `now` = 810 (13:30), so all three conversions are correct. In particular, 16:30 became 990, not 960, so the half hour was kept.
+- `blocked` = true, taken from "blocked for maintenance today".
+- `bookings` = `[]`, taken from "there are no other bookings". The model did not invent a booking.
+
+Nobody was wrong here: the request gave every value, and the model converted them correctly. The model did not refuse to call because the room is blocked. This is the right behavior, because a blocked room is data for the function, not a reason to skip the call. The schema accepted the call because the shape is valid. `canBook` would answer Unavailable for two reasons: the room is blocked (AC3) and the slot is 150 minutes, over the 120-minute limit (AC2). Both decisions belong to the function, not to the schema.
 ### R3
 
 ```text
-
+{"name": "check_room", "description": "Checks whether a room can be booked for a requested time slot.", "arguments": {"message": "Could you tell me the exact start time you’d like, and the current time so I can check availability?"}}
 ```
 
 <!-- What information was missing? Did the model ask, or call? If it called, which values did it invent, and from where? -->
+The request leaves almost everything out. Missing: `now` (the current time), the exact `start` and `end` ("tomorrow afternoon" and "a couple of hours" are vague, and "tomorrow" is also a different day from the one `now` refers to), `blocked`, and `bookings`.
 
+The model did not follow the instruction to reply with one short question. It wrote a call to `check_room` and hid the question inside an invented argument, `message`. It also added a `description` key that the requested form does not have. I saved the reply as `r3.json` exactly as it came, because it is a call object and not a plain question.
+
+The model invented no values: it did not make up a start time, a `now`, a `blocked` flag or a booking list. It saw that the start time and the current time were missing, but its question does not cover `blocked`, `bookings`, the length of "a couple of hours", or what "afternoon" means.
+
+F7 PASSES only because exactly one of the two files exists and is not empty. The checker does not judge the content. This call would not pass my schema: `message` is not allowed (`additionalProperties: false`, the same case as S05), and all five required fields are missing. So the schema would stop it before `canBook` ran, but the model should have asked a plain question that the user could answer.
 ## 5. What the schema cannot check
 
 <!-- Name the acceptance criteria (AC1-AC6, README section 3) that a JSON Schema with the allowed keywords cannot
      enforce, and say why for each. At least two, by their AC number. Which part of AC1 CAN the schema enforce? -->
+A JSON Schema with the allowed keywords checks the **shape** of each value on its own. It cannot compare two values with each other, and it cannot look at anything outside the call. These criteria therefore stay in `canBook`:
 
+- **AC1, `start < end`:** the schema can compare a value with a fixed number (`minimum`, `maximum`), but not one field with another. `"start": 600` with `"end": 600` or `"end": 500` is a valid call, because both numbers are in range.
+- **AC1, "start after `now`":** this also compares two fields, `start` and `now`, so the schema cannot enforce it. A call with `start` = 540 and `now` = 810 is valid in shape, but the slot is already in the past.
+- **AC2, at most 120 minutes:** the length is `end - start`, which needs arithmetic on two fields. The R2 call (840 to 990, 150 minutes) passes the schema, but the slot is too long.
+- **AC3, not when blocked:** the schema only checks that `blocked` is a boolean. `"blocked": true` is a perfectly valid value, and what it means for the answer is a decision. R2 is a call that should be made even though the room is blocked.
+- **AC4, no overlap (touching allowed):** overlap depends on comparing the requested slot with every booking in the list. The schema cannot do this, and it also cannot see whether a booking's own `start` is below its `end`.
+- **AC5, does not change or save anything:** this is a property of the function's behavior, not of its input. A schema describes the arguments, so it cannot guarantee what the code does with them. Only the description tells the model that the tool does not save.
+
+**What the schema CAN enforce from AC1:** the fixed-range part. Each time must be a whole number between 0 and 1440 (`"type": "integer"`, `"minimum": 0`, `"maximum": 1440`). This refuses `-30` (S06), `1500` (S07) and `600.5` (S10). It cannot enforce the part of AC1 that relates two values to each other.
+
+In short, the schema checks that each value is the right kind of thing in the right range, and `canBook` decides whether the values make sense together.
 ## 6. Permissions — allow, ask or block
 
 | # | Action | Decision (allow / ask / block) | Reason (the risk, in one sentence or more) |
 | --- | --- | --- | --- |
-| A1 | call `check_room` with the times the user just typed | | |
-| A2 | read `week-08/app/src/booking.ts` | | |
-| A3 | edit `booking.ts` to raise the 120-minute limit to 180 | | |
-| A4 | run `npm test` in `week-08/app` | | |
-| A5 | run `git reset --hard` to undo its own last three edits | | |
-| A6 | `git commit` its change on the `week-09` branch | | |
-| A7 | `git push` to `main` | | |
-| A8 | send the contents of `.env` to an MCP server it found online | | |
+| A1 | call `check_room` with the times the user just typed | allow | The tool only reads and answers Available or Unavailable (AC5), so a wrong or rejected call changes nothing; the schema also refuses malformed arguments before `canBook` runs. |
+| A2 | read `week-08/app/src/booking.ts` | allow | Reading a source file inside the repository changes nothing, and `booking.ts` is application logic rather than a file with secrets, so the only cost of a wrong read is wasted attention. |
+| A3 | edit `booking.ts` to raise the 120-minute limit to 180 | ask | This changes the business rule AC2, not just code: one user's request for 3 hours does not authorize a policy change for everyone, and the tests, the page feedback and the `check_room` description would stop matching the code, so a human must approve it first. |
+| A4 | run `npm test` in `week-08/app` | allow | Running the tests only reads the code and reports results, so it gives the agent useful feedback at little risk; the one risk is that `npm test` runs the project's own script, but this is my own Week 08 project and any change it made inside the repository can be reviewed and undone with git. |
+| A5 | run `git reset --hard` to undo its own last three edits | ask | `git reset --hard` throws away all uncommitted changes in the working directory, not just the agent's own three edits, so my own unsaved work could be lost for good; a human should confirm what it will discard, and it becomes safe once the work is committed as a checkpoint. |
+| A6 | `git commit` its change on the `week-09` branch | allow | A commit on the working branch is local and easy to undo, and it protects the agent's work from a later `git reset --hard`; the small risk is committing a file that should not be saved, such as `.env`, which is why the review happens before any push. |
+| A7 | `git push` to `main` | block | Pushing to `main` publishes the change to the shared branch and is hard to undo once others pull it; this course requires all work on `week-09` with the PR left open and never merged, so the agent has no legitimate reason to touch `main`. |
+| A8 | send the contents of `.env` to an MCP server it found online | block | `.env` holds secrets such as API keys, and sending them to an unverified server cannot be undone except by rotating every key; "to configure it" is what a malicious server or prompt injection would say, and no legitimate setup needs the raw file. |
 
 ## 7. Checkpoint
 
