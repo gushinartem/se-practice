@@ -200,20 +200,73 @@ In short, the schema checks that each value is the right kind of thing in the ri
 
 <!-- The commit you would make before letting such an agent edit anything: its real SHA (git log --oneline),
      the exact command that returns you to it, and what that command would throw away. -->
+Before letting an agent edit anything, I would first make sure that `git status` says the working tree is clean, and make a commit that holds all my work so far. The checkpoint commit in my repository is:
 
+```text
+ccc94c2 week-09: add model calls R1-R3 and report section 4-6
+```
+
+SHA: `ccc94c2`
+
+If the agent damages something and I want to go back to this state, the command is:
+
+```bash
+git reset --hard ccc94c2
+```
+
+What this command throws away:
+
+- every change in the working directory that is not committed, including edits the agent made to tracked files, and any of my own unsaved edits made after the checkpoint;
+- every commit made after `ccc94c2` on `week-09`. They would no longer be on the branch and would stay reachable only through `git reflog` for a limited time.
+
+It does **not** throw away anything that was committed at or before `ccc94c2`, because the reset restores exactly that snapshot. Untracked new files that the agent created are not removed by `git reset --hard`, so I would also have to check `git status` and delete them myself or with `git clean`. This is why the checkpoint must be committed first: work that is not in a commit cannot be brought back by this command.
 ## 8. Checker output
 
 Paste the **whole** output of your last `python tests/check_tool.py`, unedited.
 
 ```text
+PASS  D1    tool/check_room.json exists and is valid JSON
+PASS  D2    has name, description and inputSchema
+PASS  D3    name is exactly "check_room"
+PASS  D4    description: 25+ words, says minutes, 1440, and that it does not save
+PASS  D5    inputSchema: an object with exactly the five fields, all required
+PASS  D6    inputSchema uses only the keywords listed in README section 5
+PASS  S01   the R1 call, valid -> accept
+PASS  S02   no existing bookings: bookings = [] -> accept
+PASS  S03   end as a string: "11:00" -> refuse
+PASS  S04   now missing -> refuse
+PASS  S05   an extra field: "room": "204" -> refuse
+PASS  S06   start below the day: -30 -> refuse
+PASS  S07   end beyond the day: 1500 -> refuse
+PASS  S08   a booking with no end: {start: 660} -> refuse
+PASS  S09   blocked as a string: "false" -> refuse
+PASS  S10   start not a whole minute: 600.5 -> refuse
+PASS  S11   end at the end of the day: 1440 -> accept
+PASS  S12   a booking as a pair: [660, 720] -> refuse
+PASS  F1    calls\r1.json: a call to check_room
+PASS  F2    calls\r1.json: arguments valid against your schema
+PASS  F3    calls\r1.json: arguments equal the expected ones (README section 5, Part 2)
+PASS  F4    calls\r2.json: a call to check_room
+PASS  F5    calls\r2.json: arguments valid against your schema
+PASS  F6    calls\r2.json: arguments equal the expected ones (README section 5, Part 2)
+PASS  F7    calls/r3: exactly one of r3.json (it called) or r3.txt (it asked), not empty
+PASS  L1    section 5 names at least two acceptance criteria (AC1-AC6) the schema cannot check
+PASS  L2    section 6: A1-A8 each have allow / ask / block and a reason of 5+ words
+PASS  L3    section 7 names the checkpoint commit (a SHA)
+PASS  L4    section 10: a conclusion of 80-150 words
+PASS  L5    AI_USAGE.md filled in (a tool row, and signed)
 
+SUMMARY: 30 PASS · 0 FAIL · 0 ERROR  (of 30 checks)
 ```
 
 ## 9. What still fails
 
 <!-- Every check in submission.yml known_fails, with the reason. "None" if all 30 pass. -->
+None. The last run of `python tests/check_tool.py` shows 30 PASS, 0 FAIL and 0 ERROR, so `known_fails` in `submission.yml` is empty.
 
+One observation that no check catches: the R3 reply passes F7 only because a non-empty file exists. The model did not follow the instruction to ask a plain question, and the content of that reply is analysed in section 4 (R3).
 ## 10. Conclusion (80–150 words)
 
 <!-- What did you learn about the line between the schema, the model and the function? Be specific:
      name a case, a request or an action. "Tool definitions are important" is worth nothing. -->
+This lab showed me three separate layers. The schema checks shape: all twelve S cases passed, so malformed calls such as `"end": "11:00"` or an extra `room` field are refused before `canBook` runs. The model converts and fills arguments: in R2 it correctly turned 16:30 into 990 and still made the call although the room was blocked. But in R3 it ignored the instruction to ask a plain question and hid it in an invented `message` argument, so a model cannot be trusted to follow the format. The function decides meaning: R2 is a valid call that `canBook` must still answer Unavailable (AC2, AC3). Finally, A5 and A8 showed me that an agent's permissions must be limited by risk, not by good intentions.
