@@ -159,7 +159,13 @@ PLEASE GIVE ME:
 <!-- Short: the catalog (how many rooms, which equipment), how the filter is chosen on the page,
      what the empty state says, what happens to an old result when the room changes. -->
 
-(write here)
+**Catalog.** `src/rooms.ts` holds 5 fictional rooms, each with an id, name, capacity, equipment list, `blocked` value and its own bookings: Room A-101 (12 seats, projector and whiteboard, booked 10:00–11:00), Room B-204 (30 seats, projector, whiteboard and video-conference, no bookings), Room C-310 (6 seats, whiteboard, booked 09:00–10:00 and 12:00–13:00), Lab D-015 (24 seats, computers and projector, booked 13:00–15:00) and Hall E-402 (60 seats, projector and video-conference, blocked). The four equipment names are `computers`, `projector`, `video-conference` and `whiteboard`.
+
+**How the filter is chosen.** The page has an Attendees number field and one checkbox per equipment item. The checkbox list is built from the equipment found in `ROOMS`, so the page holds no equipment names of its own. `filterRooms` keeps a room only if its capacity is at least the attendees (F1) and it has every ticked item (F2). Only the matching rooms are shown, as a clickable list with seats and equipment. Blocked rooms stay in the list with a red "blocked" tag, and `checkRoom` never reports them as available (F3). If the selected room drops out of the list, the first matching room is selected.
+
+**Empty state.** When no room matches, the list is replaced by the message "No rooms match these requirements. Try fewer attendees or fewer equipment items." and the Check availability button is disabled (F4).
+
+**Old result when the room changes.** The check uses the selected room's own bookings and `blocked` value through `checkRoom`. Changing the selected room, the attendees, an equipment item or any time field clears the old result and any error message, so a result is never shown under a different room or different times (F5). The result line also names the room it belongs to.
 
 ### 4.2 Demonstration
 
@@ -168,11 +174,11 @@ PLEASE GIVE ME:
 
 | Screenshot | What it shows |
 | --- | --- |
-| `evidence/filter-match.png` | (write here) |
-| `evidence/filter-empty.png` | (write here) |
-| `evidence/switch-a.png` | (write here) |
-| `evidence/switch-b.png` | (write here) |
-| `evidence/narrow.png` | (write here) |
+| `evidence/filter-match.png` | Filter: 20 attendees and `projector` ticked. Three of the five rooms are listed: Room B-204 (30 seats, selected), Lab D-015 (24 seats) and Hall E-402 (60 seats, tagged "blocked"). Room A-101 (12 seats) and Room C-310 (6 seats, no projector) are not shown. Times are 09:00 / 11:00 / 12:00 and no result is shown yet. |
+| `evidence/filter-empty.png` | Filter: 20 attendees with `computers` and `video-conference` ticked. No room has both, so no room is listed. The red empty-state message "No rooms match these requirements. Try fewer attendees or fewer equipment items." is shown and the Check availability button is greyed out (F4). |
+| `evidence/switch-a.png` | No filter, so all five rooms are listed, with Room A-101 selected. Current time 09:00 AM, start 10:00 AM, end 11:00 AM. Result: "Room A-101: Unavailable" in red, because A-101 is already booked 10:00–11:00, which is shown under its bookings. |
+| `evidence/switch-b.png` | The same times as `switch-a.png` (09:00 AM, 10:00 AM to 11:00 AM), but Room B-204 is selected. Result: "Room B-204: Available" in green, and its bookings list says "none". Same request, different room, different result (F5). |
+| `evidence/narrow.png` | The page at phone width in portrait, in a single column with nothing clipped. No filter, all five rooms listed with Room A-101 selected, times 09:00 AM / 11:00 AM / 12:00 PM. Result: "Room A-101: Available" in green, with its 10:00–11:00 booking listed below (AC6). |
 
 ## 5. Refactoring (Task 3)
 
@@ -182,10 +188,17 @@ PLEASE GIVE ME:
 
 | Module or component | Responsibility |
 | --- | --- |
-| `src/rooms.ts` | (write here) |
-| `src/booking.ts` | (write here) |
-| `src/filter.ts` | (write here) |
-| (write here) | (write here) |
+| `src/rooms.ts` | Data only: the `Room` type and `ROOMS`, 5 fictional rooms, each with id, name, capacity, equipment, its own `blocked` value and its own bookings. It holds no logic. |
+| `src/booking.ts` | The booking rules: `isValidRange` (valid time range), `canBook` (AC1–AC5: valid range, not in the past, at most 120 minutes, not blocked, no overlap but touching allowed, no mutation) and `checkRoom` (finds the chosen room by id and calls `canBook` with that room's own `blocked` and `bookings`; an unknown id is not available; F3, F5). |
+| `src/filter.ts` | `filterRooms`: keeps a room only if its capacity is at least the attendees (F1) and it has every selected equipment item (F2). It returns a new array and never changes the catalog. |
+| `src/time.ts` | The time helpers `toMinutes` (an "HH:MM" string to minutes after midnight) and `fmt` (minutes back to "HH:MM"). |
+| `src/App.tsx` | The page: holds the state (filter, selected room, times, result, error), calls `filterRooms` and `checkRoom`, and clears the old result when the room, filter or times change. It holds no room data and no booking rule. |
+| `src/components/FilterPanel.tsx` | Draws the attendees field and the equipment checkboxes, and reports changes through props. |
+| `src/components/RoomList.tsx` | Draws the matching rooms as a selectable list, with the "blocked" tag, or the empty-state message when no room matches (F4). |
+| `src/components/TimeForm.tsx` | Draws the current-time, start, end and "Ends at 24:00" inputs. |
+| `src/components/ResultPanel.tsx` | Draws the error message or the "Available" / "Unavailable" result with the room's name (AC6). |
+| `src/components/BookingsList.tsx` | Draws the selected room's existing bookings. |
+| `src/main.tsx` | Entry point: renders `App` into the page. |
 
 ### 5.2 Design decisions
 
@@ -194,8 +207,10 @@ PLEASE GIVE ME:
 
 | Decision | Alternative I did not take | Why |
 | --- | --- | --- |
-| (write here) | (write here) | (write here) |
-| (write here) | (write here) | (write here) |
+| Blocked rooms stay in the filtered list with a red "blocked" tag, and `checkRoom` always answers "Unavailable" for them. | Hide blocked rooms from the list in `filterRooms`. | F1 and F2 are only about capacity and equipment, so `filterRooms` should not also decide blocking. Test T25 INT covers this: `filterRooms` returns the blocked room r4 and `checkRoom` then returns false for it. The person also sees why a room can't be booked, instead of the room silently disappearing, and F3 still holds because blocking is decided in one place, `canBook`. |
+| `checkRoom(rooms, roomId, request)` takes the whole catalog and finds the room itself, then calls `canBook` with that room's own `blocked` and `bookings`. | Let the page pick the room and pass `room.bookings` to `canBook` directly, as the page did before the refactoring. | That is how the tests prove the result comes from the chosen room (F5). T13 asks the same times of rooms r1 and r2 and gets false and true, and T14 shows that another room's booking doesn't block r2. It also fixed risk 1: the old page-level `blocked` checkbox applied to whichever room was selected, while now each room carries its own `blocked` value (T12, F3). |
+| The "valid time range" rule lives once, as `isValidRange` in `src/booking.ts`, and both `canBook` and the page use it. | Keep `!(s < e)` in `App.tsx` for the error message and the longer check inside `canBook`. | The same rule was written twice (risk 5). With one function, the message shown to the person and the decision can't disagree. T01 and T02 (AC1) still pass after the change, and the page keeps its own message text because wording belongs to the UI (AC6). |
+| Fix the error/result conflict with a minimal change: `check()` returns right after setting an error, and one `clearFeedback()` runs whenever the room, filter or times change. | Replace the `error` and `result` states with one `status` value, which the assistant's plan suggested. | Risk 3 only needed an early `return` and clearing the old result (F5). A new status type would have changed more of `App.tsx` for the same behaviour, and the README asks for one small change at a time with all 26 tests run after each. |
 
 ### 5.3 Duplication removed
 
@@ -214,30 +229,34 @@ PLEASE GIVE ME:
 
 | ID | Test title (as in the file) | Input → expected |
 | --- | --- | --- |
-| AC1 | (write here) | (write here) |
-| AC2 | (write here) | (write here) |
-| AC3 | (write here) | (write here) |
-| AC4 | (write here) | (write here) |
-| AC5 | (write here) | (write here) |
-| F1 | (write here) | (write here) |
-| F2 | (write here) | (write here) |
-| F3 | (write here) | (write here) |
-| F4 | (write here) | (write here) |
-| F5 | (write here) | (write here) |
-| B1 | (write here) | (write here) |
-| B2 | (write here) | (write here) |
-| B3 | (write here) | (write here) |
-| B4 | (write here) | (write here) |
-| B5 | (write here) | (write here) |
-| B6 | (write here) | (write here) |
-| INT | (write here) | (write here) |
+| AC1 | `T01 AC1: start equal to end is rejected`<br>`T02 AC1: start after end is rejected`<br>`T03 AC1: a request in the past is rejected` | start 720, end 720 → `false`; start 780, end 720 → `false`; start 540, end 570 with now 600 → `false` |
+| AC2 | `T04 B1 AC2: exactly 120 minutes (720-840) is available`<br>`T05 B2 AC2: 121 minutes (720-841) is rejected` | 720–840 → `true`; 720–841 → `false` |
+| AC3 | `T06 AC3: a blocked room is rejected even when the time is free` | blocked room, free time 720–780 → `false` |
+| AC4 | `T07 B4 AC4: overlapping an existing booking (630-690 vs 600-660) is rejected`<br>`T08 B3 AC4: touching the end of a booking (660-720 after 600-660) is available` | 630–690 against booking 600–660 → `false`; 660–720 → `true` |
+| AC5 | `T10 AC5: checking does not change the booking data`<br>`T11 AC5: the same request asked twice gives the same answer` | two checks on a bookings list → list unchanged; same request twice → same answer `true` both times |
+| F1 | `T17 F1: only rooms with capacity of at least 10 are kept` | 10 attendees, no equipment → rooms r2, r3, r4 (capacities 12, 20, 40) |
+| F2 | `T20 F2: a room must contain all selected items (projector and whiteboard)`<br>`T21 F2: having only one of two selected items is not enough` | projector + whiteboard → r2, r3; whiteboard + video-conference → r3 only |
+| F3 | `T12 F3: a blocked room is not available even when its time is free` | `checkRoom` on blocked r3, free time 720–780 → `false` |
+| F4 | `T24 F4: when no room matches the result is an empty list` | 100 attendees → `[]` |
+| F5 | `T13 F5: the same times give different results for different rooms`<br>`T14 F5: a room is not blocked by the bookings of another room`<br>`T15 F5: an unknown room id is not available` | 600–660 on r1 (booked 600–660) → `false` and on r2 (no bookings) → `true`; 630–690 on r2 → `true`; unknown id → `false` |
+| B1 | `T04 B1 AC2: exactly 120 minutes (720-840) is available` | 720–840 → `true` |
+| B2 | `T05 B2 AC2: 121 minutes (720-841) is rejected` | 720–841 → `false` |
+| B3 | `T08 B3 AC4: touching the end of a booking (660-720 after 600-660) is available`<br>`T09 B3 AC4: touching the start of a booking (540-600 before 600-660) is available` | 660–720 → `true`; 540–600 → `true` |
+| B4 | `T07 B4 AC4: overlapping an existing booking (630-690 vs 600-660) is rejected` | 630–690 against 600–660 → `false` |
+| B5 | `T18 B5 F1: capacity exactly equal to the attendees (12) is included` | 12 attendees → r2 (12 seats) is in the result |
+| B6 | `T19 B6 F1: capacity one below the attendees (8 seats for 9) is excluded` | 9 attendees → r1 (8 seats) is not in the result; result is r2, r3, r4 |
+| INT | `T25 INT: filterRooms then checkRoom on each returned room` | 10 attendees + projector → r2, r3, r4; `checkRoom` for 600–660 → `[false, true, false]` (r2 booked, r3 free, r4 blocked) |
 
 ### 6.2 Commands
 
 <!-- The commands exactly as you typed them, from app/. -->
 
 ```text
-(paste here)
+cd sis-04\app
+npm install
+npx vitest run
+npm run build
+npm run dev
 ```
 
 ### 6.3 Final run
@@ -246,7 +265,18 @@ PLEASE GIVE ME:
      tests equals what your test files hold (R2). -->
 
 ```text
-(paste here)
+E:\Github\se-practice\sis-04\app>npx vitest run
+
+ RUN  v3.2.7 E:/Github/se-practice/sis-04/app
+
+ ✓ src/checkRoom.test.ts (5 tests) 4ms
+ ✓ src/filter.test.ts (10 tests) 7ms
+ ✓ src/booking.test.ts (11 tests) 6ms
+
+ Test Files  3 passed (3)
+      Tests  26 passed (26)
+   Start at  21:48:09
+   Duration  444ms (transform 103ms, setup 0ms, collect 155ms, tests 16ms, environment 1ms, prepare 404ms)
 ```
 
 ## 7. Quality evaluation (Task 5)
@@ -257,10 +287,10 @@ PLEASE GIVE ME:
 
 | Measure | Original | Final | How I obtained it |
 | --- | --- | --- | --- |
-| Automated tests passed / total | (write here) | (write here) | (write here) |
-| Duplicated logic locations removed | (write here) | (write here) | (write here) |
-| Code structure: modules and their responsibilities | (write here) | (write here) | (write here) |
-| Remaining limitation | (write here) | (write here) | (write here) |
+| Automated tests passed / total | 0/0 | 26/26 | The `Tests` line of the baseline run in 1.1 (`No test files found`, so 0/0) and of the final `npx vitest run` in 6.3 (`Tests  26 passed (26)`, in 3 files: 11 + 5 + 10). |
+| Duplicated logic locations removed | 0 | 2 | Counted in 5.3: the "start before end" rule written twice in `check()` (now `isValidRange`) and the `1440` limit typed twice (now `END_OF_DAY`). |
+| Code structure: modules and their responsibilities | 3 files in `app/src`: `App.tsx` (data, rules, helpers and UI together), `main.tsx`, `index.css` | 15 files in `app/src`: `rooms.ts`, `booking.ts`, `filter.ts`, `time.ts`, `App.tsx`, 5 components, `main.tsx`, `index.css`, 3 test files | `git ls-files sis-04/app/src` at the baseline commit `fb5bfd8` and at the head of the branch, read against 5.1 and `diagrams/after.puml`. |
+| Remaining limitation | The page had no test of any kind, so nothing could catch a change to AC1–AC5. | F4 (empty state), F5 on the page and `clearFeedback()` in `App.tsx` are shown only by the screenshots in `evidence/`. The 26 tests call `canBook`, `checkRoom` and `filterRooms`, but no test renders the page. The error messages and the disabled button are not tested either. | From what happened in this work: the F4 and F5 tests in 6.1 call the functions, while the page behaviour was checked by hand on `npm run dev`. |
 
 ## 8. AI evidence appendix
 
