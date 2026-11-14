@@ -1,3 +1,5 @@
+import type { Room } from './rooms';
+
 export type Interval = { start: number; end: number };
 
 export const MAX_MINUTES = 120;
@@ -24,4 +26,20 @@ export function canBook({
     if (start < b.end && end > b.start) return false;
   }
   return true;
+}
+
+export function checkRoom(
+  rooms: Room[],
+  roomId: string,
+  request: { start: number; end: number; now: number },
+): boolean {
+  const room = rooms.find(r => r.id === roomId);
+  if (!room) return false;
+  return canBook({
+    start: request.start,
+    end: request.end,
+    now: request.now,
+    blocked: room.blocked,
+    bookings: room.bookings,
+  });
 }
