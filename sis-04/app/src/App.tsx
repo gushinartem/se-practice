@@ -25,14 +25,21 @@ export default function App() {
   const matching = filterRooms(ROOMS, { attendees: Number(attendees) || 0, equipment });
   const room = matching.find(r => r.id === roomId) ?? matching[0] ?? null;
 
+  // Any change to the room, the filter or the times makes the old answer stale.
+  function clearFeedback() {
+    setResult(null);
+    setError('');
+  }
+
   function toggleEquipment(item: string) {
     setEquipment(current => (current.includes(item) ? current.filter(x => x !== item) : [...current, item]));
+    clearFeedback();
   }
 
   function check() {
     if (!room) return;
-    setResult(null);
     if (!start || !now || (!end && !endOfDay)) {
+      setResult(null);
       setError('Fill in the current time, the start and the end.');
       return;
     }
@@ -40,11 +47,11 @@ export default function App() {
     const e = endOfDay ? 1440 : toMinutes(end);
     const n = toMinutes(now);
     if (!(s < e)) {
+      setResult(null);
       setError('The end time must be after the start time.');
-    } else {
-      setError('');
+      return;
     }
-
+    setError('');
     setResult(checkRoom(ROOMS, room.id, { start: s, end: e, now: n }));
   }
 
@@ -55,7 +62,13 @@ export default function App() {
       <h2>1. Find a room</h2>
       <div className="row">
         <label>Attendees
-          <input type="number" min="1" value={attendees} placeholder="any" onChange={e => setAttendees(e.target.value)} />
+          <input
+            type="number"
+            min="1"
+            value={attendees}
+            placeholder="any"
+            onChange={e => { setAttendees(e.target.value); clearFeedback(); }}
+          />
         </label>
         {EQUIPMENT.map(item => (
           <label className="inline" key={item}>
@@ -74,7 +87,7 @@ export default function App() {
                 type="button"
                 className={`room${room?.id === r.id ? ' selected' : ''}`}
                 aria-pressed={room?.id === r.id}
-                onClick={() => setRoomId(r.id)}
+                onClick={() => { setRoomId(r.id); clearFeedback(); }}
               >
                 <strong>{r.name}</strong>
                 {r.blocked && <span className="tag">blocked</span>}
@@ -87,10 +100,18 @@ export default function App() {
 
       <h2>2. Check a time</h2>
       <div className="row">
-        <label>Current time<input type="time" value={now} onChange={e => setNow(e.target.value)} /></label>
-        <label>Start<input type="time" value={start} onChange={e => setStart(e.target.value)} /></label>
-        <label>End<input type="time" value={end} disabled={endOfDay} onChange={e => setEnd(e.target.value)} /></label>
-        <label className="inline"><input type="checkbox" checked={endOfDay} onChange={e => setEndOfDay(e.target.checked)} /> Ends at 24:00</label>
+        <label>Current time
+          <input type="time" value={now} onChange={e => { setNow(e.target.value); clearFeedback(); }} />
+        </label>
+        <label>Start
+          <input type="time" value={start} onChange={e => { setStart(e.target.value); clearFeedback(); }} />
+        </label>
+        <label>End
+          <input type="time" value={end} disabled={endOfDay} onChange={e => { setEnd(e.target.value); clearFeedback(); }} />
+        </label>
+        <label className="inline">
+          <input type="checkbox" checked={endOfDay} onChange={e => { setEndOfDay(e.target.checked); clearFeedback(); }} /> Ends at 24:00
+        </label>
       </div>
       <button onClick={check} disabled={!room}>Check availability</button>
       {error && <p className="error">{error}</p>}
