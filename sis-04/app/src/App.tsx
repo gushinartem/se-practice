@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { canBook } from './booking';
 
 // Starter for SIS #04, for students with no Week 07 / Week 08 project (declare: starter).
 // The availability decision lives INSIDE this component on purpose: your refactoring (Task 3)
@@ -46,20 +47,7 @@ export default function App() {
       setError('');
     }
 
-    let ok = true;
-    if (!(0 <= s && s < e && e <= 1440)) ok = false;
-    else if (!(s > n)) ok = false;
-    else if (e - s > 120) ok = false;
-    else if (blocked) ok = false;
-    else {
-      for (const b of room.bookings) {
-        if (s < b.end && e > b.start) {
-          ok = false;
-          break;
-        }
-      }
-    }
-    setResult(ok);
+    setResult(canBook({ start: s, end: e, now: n, blocked, bookings: room.bookings }));
   }
 
   return (
