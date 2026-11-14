@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { checkRoom } from './booking';
+import { checkRoom, isValidRange, END_OF_DAY } from './booking';
 import { filterRooms } from './filter';
 import { ROOMS } from './rooms';
 
@@ -44,9 +44,9 @@ export default function App() {
       return;
     }
     const s = toMinutes(start);
-    const e = endOfDay ? 1440 : toMinutes(end);
+    const e = endOfDay ? END_OF_DAY : toMinutes(end);
     const n = toMinutes(now);
-    if (!(s < e)) {
+    if (!isValidRange(s, e)) {
       setResult(null);
       setError('The end time must be after the start time.');
       return;
