@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { checkRoom, isValidRange, END_OF_DAY } from './booking';
 import { filterRooms } from './filter';
 import { ROOMS } from './rooms';
-
-const toMinutes = (value: string) => {
-  const [h, m] = value.split(':').map(Number);
-  return h * 60 + m;
-};
-const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+import { toMinutes } from './time';
+import FilterPanel from './components/FilterPanel';
+import RoomList from './components/RoomList';
+import TimeForm from './components/TimeForm';
+import type { TimeValues } from './components/TimeForm';
+import ResultPanel from './components/ResultPanel';
+import BookingsList from './components/BookingsList';
 
 const EQUIPMENT = Array.from(new Set(ROOMS.flatMap(r => r.equipment))).sort();
 
@@ -15,10 +16,7 @@ export default function App() {
   const [attendees, setAttendees] = useState('');
   const [equipment, setEquipment] = useState<string[]>([]);
   const [roomId, setRoomId] = useState('a101');
-  const [now, setNow] = useState('09:00');
-  const [start, setStart] = useState('11:00');
-  const [end, setEnd] = useState('12:00');
-  const [endOfDay, setEndOfDay] = useState(false);
+  const [times, setTimes] = useState<TimeValues>({ now: '09:00', start: '11:00', end: '12:00', endOfDay: false });
   const [result, setResult] = useState<boolean | null>(null);
   const [error, setError] = useState('');
 
@@ -31,13 +29,29 @@ export default function App() {
     setError('');
   }
 
+  function changeAttendees(value: string) {
+    setAttendees(value);
+    clearFeedback();
+  }
+
   function toggleEquipment(item: string) {
     setEquipment(current => (current.includes(item) ? current.filter(x => x !== item) : [...current, item]));
     clearFeedback();
   }
 
+  function selectRoom(id: string) {
+    setRoomId(id);
+    clearFeedback();
+  }
+
+  function changeTimes(patch: Partial<TimeValues>) {
+    setTimes(current => ({ ...current, ...patch }));
+    clearFeedback();
+  }
+
   function check() {
     if (!room) return;
+    const { now, start, end, endOfDay } = times;
     if (!start || !now || (!end && !endOfDay)) {
       setResult(null);
       setError('Fill in the current time, the start and the end.');
@@ -60,71 +74,21 @@ export default function App() {
       <h1>Smart Campus Room Availability</h1>
 
       <h2>1. Find a room</h2>
-      <div className="row">
-        <label>Attendees
-          <input
-            type="number"
-            min="1"
-            value={attendees}
-            placeholder="any"
-            onChange={e => { setAttendees(e.target.value); clearFeedback(); }}
-          />
-        </label>
-        {EQUIPMENT.map(item => (
-          <label className="inline" key={item}>
-            <input type="checkbox" checked={equipment.includes(item)} onChange={() => toggleEquipment(item)} /> {item}
-          </label>
-        ))}
-      </div>
-
-      {matching.length === 0 ? (
-        <p className="empty">No rooms match these requirements. Try fewer attendees or fewer equipment items.</p>
-      ) : (
-        <ul className="rooms">
-          {matching.map(r => (
-            <li key={r.id}>
-              <button
-                type="button"
-                className={`room${room?.id === r.id ? ' selected' : ''}`}
-                aria-pressed={room?.id === r.id}
-                onClick={() => { setRoomId(r.id); clearFeedback(); }}
-              >
-                <strong>{r.name}</strong>
-                {r.blocked && <span className="tag">blocked</span>}
-                <span className="meta">{r.capacity} seats · {r.equipment.join(', ')}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <FilterPanel
+        attendees={attendees}
+        equipment={equipment}
+        options={EQUIPMENT}
+        onAttendees={changeAttendees}
+        onToggle={toggleEquipment}
+      />
+      <RoomList rooms={matching} selectedId={room?.id ?? null} onSelect={selectRoom} />
 
       <h2>2. Check a time</h2>
-      <div className="row">
-        <label>Current time
-          <input type="time" value={now} onChange={e => { setNow(e.target.value); clearFeedback(); }} />
-        </label>
-        <label>Start
-          <input type="time" value={start} onChange={e => { setStart(e.target.value); clearFeedback(); }} />
-        </label>
-        <label>End
-          <input type="time" value={end} disabled={endOfDay} onChange={e => { setEnd(e.target.value); clearFeedback(); }} />
-        </label>
-        <label className="inline">
-          <input type="checkbox" checked={endOfDay} onChange={e => { setEndOfDay(e.target.checked); clearFeedback(); }} /> Ends at 24:00
-        </label>
-      </div>
+      <TimeForm values={times} onChange={changeTimes} />
       <button onClick={check} disabled={!room}>Check availability</button>
-      {error && <p className="error">{error}</p>}
-      {result !== null && room && (
-        <p className={`result ${result ? 'available' : 'unavailable'}`}>{room.name}: {result ? 'Available' : 'Unavailable'}</p>
-      )}
+      <ResultPanel error={error} result={result} roomName={room?.name ?? null} />
 
-      {room && (
-        <>
-          <h2>Existing bookings: {room.name}</h2>
-          <ul>{room.bookings.length ? room.bookings.map((b, i) => <li key={i}>{fmt(b.start)}–{fmt(b.end)}</li>) : <li>none</li>}</ul>
-        </>
-      )}
+      {room && <BookingsList room={room} />}
     </main>
   );
 }
