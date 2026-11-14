@@ -1,18 +1,6 @@
 import { useState } from 'react';
 import { canBook } from './booking';
-
-// Starter for SIS #04, for students with no Week 07 / Week 08 project (declare: starter).
-// The availability decision lives INSIDE this component on purpose: your refactoring (Task 3)
-// moves it into src/booking.ts as canBook({ start, end, now, blocked, bookings }), the rooms into
-// src/rooms.ts and the new filter into src/filter.ts, without changing what AC1-AC6 decide.
-
-type Interval = { start: number; end: number };
-type Room = { id: string; name: string; blocked: boolean; bookings: Interval[] };
-
-const ROOMS: Room[] = [
-  { id: 'a101', name: 'Room A-101', blocked: false, bookings: [{ start: 600, end: 660 }] },
-  { id: 'b204', name: 'Room B-204', blocked: false, bookings: [] },
-];
+import { ROOMS } from './rooms';
 
 const toMinutes = (value: string) => {
   const [h, m] = value.split(':').map(Number);
