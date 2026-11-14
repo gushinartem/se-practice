@@ -150,7 +150,7 @@ PLEASE GIVE ME:
 
 | Suggestion (as the assistant made it) | Decision | Why — with the AC, F-rule, test or file behind it |
 | --- | --- | --- |
-| (write here) | Rejected / Modified | (write here) |
+| Plan step 2: "Write characterization tests for AC1–AC5 against the current behavior" through the component, and "record the current outputs even where you think they are wrong". | Modified | I kept the idea of a safety net before refactoring, but not the method. README §9 requires expected values to come from AC1–AC5 and F1–F5, never from what the code returns, and tests must import the real `./booking`, not render the page. `check()` in `src/App.tsx` is not exported and, when `!(s < e)`, sets an error and still sets a result, so recording its output would have frozen that bug (risk 3, AC6). Instead my plan step 1 writes `src/booking.test.ts` from the rules (AC1–AC5, B1–B4), sees it fail because `src/booking.ts` does not exist, and only then extracts `canBook`. |
 
 ## 4. Feature extension (Task 2)
 
