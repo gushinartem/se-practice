@@ -1,12 +1,27 @@
-' diagrams/before.puml — the modules and components of your STARTING POINT and what depends on what.
-' Replace this stub. A component diagram is enough, for example:
-'
-'   @startuml
-'   component "App.tsx" as App
-'   component "booking.ts" as Booking
-'   App --> Booking : canBook()
-'   note right of App : rooms, times and the result all live here
-'   @enduml
-'
 @startuml
+title Before: starter (baseline fb5bfd8)
+
+skinparam componentStyle rectangle
+
+package "sis-04/app/src" {
+  component [main.tsx] as main
+  component [App.tsx] as App
+  component [index.css] as css
+}
+
+component [react] as react <<library>>
+
+main --> App : imports
+main --> css : imports
+App --> react : imports
+
+note right of App
+  The whole application in one file:
+  - Room type and ROOMS (2 rooms, no capacity or equipment)
+  - toMinutes() and fmt() helpers
+  - check(): the AC1-AC4 decision, inline
+  - the form, the result and the bookings list
+  No tests, no separate rules, data or filter.
+end note
+
 @enduml
