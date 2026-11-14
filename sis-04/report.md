@@ -14,13 +14,13 @@
 
 | Item | Value |
 | --- | --- |
-| Assistant (tool) | (write here) |
-| Assistant model | (write here) |
-| Starting point | (write here) |
-| Baseline commit | (write here) |
-| Language (ts or js) | (write here) |
-| Vitest version | (write here) |
-| Where I ran the tests | (write here) |
+| Assistant (tool) | Claude |
+| Assistant model | Haiku 5.5 low |
+| Starting point | starter |
+| Baseline commit | fb5bfd8 |
+| Language (ts or js) | ts |
+| Vitest version | 3.2.7 |
+| Where I ran the tests | local machine |
 
 ### 1.1 Baseline run
 
@@ -29,7 +29,14 @@
      "No test files found". That is your honest "original" number, 0/0. -->
 
 ```text
-(paste here)
+E:\Github\se-practice\sis-04\app>npx vitest run
+
+ RUN  v3.2.7 E:/Github/se-practice/sis-04/app
+
+No test files found, exiting with code 1
+
+include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
 ```
 
 ## 2. Context for the assistant
@@ -40,7 +47,22 @@
      they do. A tree is fine:  src/App.tsx — the page, holds the rooms and the form … -->
 
 ```text
-(paste here)
+sis-04/app/  (starting point: starter, baseline commit fb5bfd8)
+├── index.html          — Vite entry page, mounts the app
+├── package.json        — scripts (dev, build, preview, test = "vitest run"); React 18, Vite 5, Vitest 3, TypeScript 5
+├── tsconfig.json       — TypeScript settings
+├── vite.config.ts      — Vite config
+└── src/
+    ├── main.tsx        — renders <App /> into #root, imports index.css
+    ├── index.css       — all styling; one @media (max-width: 480px) rule makes the layout a single column
+    └── App.tsx         — the WHOLE application in one file:
+                          · type Room and the ROOMS array (2 rooms: a101, b204, with id, name, blocked, bookings; no capacity or equipment)
+                          · toMinutes() and fmt() time helpers
+                          · App component: holds state (roomId, now, blocked, start, end, endOfDay, result, error)
+                          · check(): reads the form, validates input, and decides Available / Unavailable
+                            inline (AC1 start<end and not in the past, AC2 max 120 min, AC3 blocked, AC4 overlap) — not a separate function
+                          · renders the form, the result and the list of the room's bookings
+No test files exist. No src/booking, src/rooms or src/filter modules exist yet.
 ```
 
 ### 2.2 The context message as sent
@@ -49,7 +71,49 @@
      (no login, payments, live APIs or database; fictional data only). Unedited. -->
 
 ```text
-(paste here)
+I am extending a small React + TypeScript + Vite app (Smart Campus Room Availability Checker) for a university assignment. I want a maintainability analysis and a plan of small steps. Please give NO code yet and do NOT propose a full rewrite.
+
+REPOSITORY MAP (sis-04/app, baseline commit fb5bfd8, no tests yet):
+- index.html: Vite entry page, mounts the app
+- package.json: scripts dev, build, preview, test = "vitest run"; React 18, Vite 5, Vitest 3, TypeScript 5
+- tsconfig.json, vite.config.ts: config
+- src/main.tsx: renders <App /> into #root, imports index.css
+- src/index.css: all styling; one @media (max-width: 480px) rule makes a single column
+- src/App.tsx: the WHOLE application in one file:
+  - type Room and the ROOMS array (2 rooms: a101, b204, with id, name, blocked, bookings; no capacity or equipment)
+  - toMinutes() and fmt() time helpers
+  - App component: state roomId, now, blocked, start, end, endOfDay, result, error
+  - check(): reads the form, validates input and decides Available / Unavailable inline (not a separate function)
+  - renders the form, the result and the room's bookings list
+- No test files. No src/booking, src/rooms or src/filter modules exist yet.
+
+CURRENT ACCEPTANCE CRITERIA (must be preserved):
+AC1 Reject start >= end and requests in the past.
+AC2 Enforce the maximum allowed duration (120 minutes).
+AC3 Reject a blocked room.
+AC4 Reject overlaps; allow bookings that only touch at endpoints.
+AC5 Return Available / Unavailable without changing booking data.
+AC6 Clear, responsive feedback on desktop and mobile.
+
+NEW FEATURE RULES:
+Extend from one room to a fictional catalog of at least 4 rooms. Each room has id, name, capacity, equipment list, blocked status and its own bookings. Only rooms that satisfy the user's selected requirements are displayed. The availability check must use the chosen room's bookings, not another room's.
+F1 Capacity filter: room capacity must be >= the requested attendees.
+F2 Equipment filter: the room must contain ALL selected required items.
+F3 A blocked room cannot be reported as available.
+F4 Show a clear empty state when no rooms match.
+F5 Changing the selected room must refresh the availability result appropriately.
+
+TARGET STRUCTURE (fixed by the assignment):
+- src/rooms.ts: Room type + ROOMS (data only)
+- src/filter.ts: filterRooms(rooms, { attendees, equipment })
+- src/booking.ts: canBook({ start, end, now, blocked, bookings }) and checkRoom(rooms, roomId, { start, end, now })
+- App.tsx and components: UI only, no rules and no room data
+
+CONSTRAINTS: no login, payments, live APIs or database; no network calls or browser storage; fictional data only; the work is done one small change at a time with all tests run after each change.
+
+PLEASE GIVE ME:
+1. At least three maintainability risks in the files above, each with the file or function it lives in, the evidence I can check in the code, and a priority (High / Medium / Low).
+2. A numbered plan of small safe steps, smallest first, that adds the catalog and the filter and moves the code into the target modules without changing what AC1-AC5 decide.
 ```
 
 ## 3. Codebase analysis (Task 1)
@@ -62,18 +126,25 @@
 
 | # | Risk | Where (file / function) | Evidence | Priority |
 | --- | --- | --- | --- | --- |
-| 1 | (write here) | (write here) | (write here) | High / Medium / Low |
-| 2 | (write here) | (write here) | (write here) | High / Medium / Low |
-| 3 | (write here) | (write here) | (write here) | High / Medium / Low |
+| 1 | `blocked` is one page-level checkbox, not a property of each room, so F3 cannot be true per room | `src/App.tsx`, `App()` state `blocked` and `check()` | `const [blocked, setBlocked] = useState(false)` is toggled by the "Room blocked" checkbox, and `check()` tests `else if (blocked)`. The `blocked` field in `ROOMS` (`blocked: false` on both rooms) is never read, so the checkbox applies to whichever room is selected | High |
+| 2 | All booking rules (AC1–AC4) are inline in one UI function, so they cannot be imported or unit-tested | `src/App.tsx`, `check()` | One function reads the form with `toMinutes`, sets error messages, runs the AC1–AC4 decision (`s > n`, `e - s > 120`, overlap loop) and calls `setResult`. The file exports only `App`, so a test cannot reach the rules without rendering the page | High |
+| 3 | The page can show an error and a result at the same time, and an old result stays when the room changes | `src/App.tsx`, `check()` and the room `<select>` | When `!(s < e)`, `check()` calls `setError(...)` and does not return, so it still reaches `setResult(ok)` and the page shows both the red error and "Unavailable". The select's `onChange` only calls `setRoomId`, so the previous result stays under the new room (F5) | Medium |
+| 4 | There are no automated tests, so a refactor could change AC1–AC5 with no signal | `app/` (no `*.test.ts` files) | Baseline run in §1.1 prints `No test files found` (0/0), although `package.json` already has `"test": "vitest run"` | Medium |
+| 5 | The same rule is written twice, and data, rules and helpers all sit in the UI file | `src/App.tsx`, `check()`, `ROOMS`, `toMinutes()`, `fmt()` | `start < end` appears as `!(s < e)` for the error message and again as `0 <= s && s < e && e <= 1440` in the decision. `Room`, `ROOMS`, `toMinutes` and `fmt` are defined in `App.tsx` next to the component | Low |
 
 ### 3.2 Improvement plan — before editing
 
 <!-- Numbered, in the order you will do it, smallest safe step first. Written BEFORE you change
      code: the commit that adds this section comes before the commit that changes app/src. -->
 
-1. (write here)
-2. (write here)
-3. (write here)
+1. **Tests first for the rules (risk 4, risk 2).** Write `src/booking.test.ts` with AC1–AC5 and B1–B4 cases, expected values taken from the requirements, and watch it fail because `src/booking.ts` does not exist. Then create `src/booking.ts` with `canBook({ start, end, now, blocked, bookings })`, copying the decision from `check()` unchanged. Run all tests.
+2. **Make `check()` call `canBook` (risk 2).** Replace the inline AC1–AC4 decision in `App.tsx` with a call to `canBook`, keep every message and behaviour, run all tests and `npm run build`, and commit.
+3. **Move the data out of the page (risk 5).** Create `src/rooms.ts` with the `Room` type and `ROOMS` extended to at least four fictional rooms, each with capacity, equipment, its own bookings and its own `blocked` value (one room blocked). `App.tsx` imports it.
+4. **Make `blocked` a per-room property (risk 1).** Remove the page-level "Room blocked" checkbox and the `blocked` state, and read the chosen room's own `blocked`. Add `checkRoom(rooms, roomId, request)` to `src/booking.ts` that calls `canBook` with that room's data, with tests F3, F5 and INT written first.
+5. **Add the filter (F1, F2, F4).** Write the tests first (F1, F2, F4, B5, B6), then create `src/filter.ts` with `filterRooms(rooms, { attendees, equipment })`. Wire attendee and equipment inputs into the page, show only matching rooms, and show an empty-state message when none match.
+6. **Fix the feedback (risk 3).** Make `check()` return after `setError` so an error and a result are never shown together, and clear the old result when the selected room or the filter changes (F5). Run all tests.
+7. **Split the UI and remove the duplicate rule (risk 5).** Move the form, result and bookings list into separate components with no rules or room data, and drop the second `start < end` check that `canBook` now covers.
+8. **Evidence.** Check the narrow layout, take the five screenshots, write `diagrams/before.puml` and `diagrams/after.puml`, run the full test suite, and fill in the remaining report sections.
 
 ### 3.3 One AI suggestion I rejected or modified
 
