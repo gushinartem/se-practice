@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { canBook } from './booking';
+import { checkRoom } from './booking';
 import { ROOMS } from './rooms';
 
 const toMinutes = (value: string) => {
@@ -11,7 +11,6 @@ const fmt = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${Str
 export default function App() {
   const [roomId, setRoomId] = useState('a101');
   const [now, setNow] = useState('09:00');
-  const [blocked, setBlocked] = useState(false);
   const [start, setStart] = useState('11:00');
   const [end, setEnd] = useState('12:00');
   const [endOfDay, setEndOfDay] = useState(false);
@@ -35,7 +34,7 @@ export default function App() {
       setError('');
     }
 
-    setResult(canBook({ start: s, end: e, now: n, blocked, bookings: room.bookings }));
+    setResult(checkRoom(ROOMS, roomId, { start: s, end: e, now: n }));
   }
 
   return (
@@ -44,14 +43,13 @@ export default function App() {
       <div className="row">
         <label>Room
           <select value={roomId} onChange={e => setRoomId(e.target.value)}>
-            {ROOMS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            {ROOMS.map(r => <option key={r.id} value={r.id}>{r.name}{r.blocked ? ' (blocked)' : ''}</option>)}
           </select>
         </label>
         <label>Current time<input type="time" value={now} onChange={e => setNow(e.target.value)} /></label>
         <label>Start<input type="time" value={start} onChange={e => setStart(e.target.value)} /></label>
         <label>End<input type="time" value={end} disabled={endOfDay} onChange={e => setEnd(e.target.value)} /></label>
         <label className="inline"><input type="checkbox" checked={endOfDay} onChange={e => setEndOfDay(e.target.checked)} /> Ends at 24:00</label>
-        <label className="inline"><input type="checkbox" checked={blocked} onChange={e => setBlocked(e.target.checked)} /> Room blocked</label>
       </div>
       <button onClick={check}>Check availability</button>
       {error && <p className="error">{error}</p>}
