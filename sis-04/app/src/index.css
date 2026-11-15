@@ -1,0 +1,21 @@
+body { font-family: system-ui, sans-serif; margin: 0; background: #f5f7fa; color: #16233a; }
+.page { max-width: 760px; margin: 2rem auto; padding: 1.5rem; background: white; border-radius: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 1rem; }
+.row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; }
+.row label.inline { flex-direction: row; align-items: center; }
+button { margin-top: 1rem; padding: 0.6rem 1.2rem; border: 0; border-radius: 8px; background: #16233a; color: white; }
+button:disabled { opacity: 0.5; }
+.result { margin-top: 1rem; font-weight: 600; }
+.available { color: #2f8f84; }
+.unavailable { color: #c0392b; }
+.error { color: #c0392b; margin-top: 0.75rem; }
+.empty { margin-top: 1rem; padding: 0.75rem 1rem; border: 1px dashed #c0392b; border-radius: 8px; color: #c0392b; }
+.rooms { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.5rem; }
+.room { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; width: 100%; margin: 0; text-align: left; background: #f5f7fa; color: #16233a; border: 2px solid transparent; }
+.room.selected { border-color: #16233a; background: #e6ecf5; }
+.room .meta { flex-basis: 100%; font-size: 0.85rem; color: #4a5a75; }
+.tag { padding: 0.1rem 0.5rem; border-radius: 999px; background: #c0392b; color: white; font-size: 0.75rem; }
+@media (max-width: 480px) {
+  .page { margin: 0; border-radius: 0; }
+  .row { flex-direction: column; }
+}

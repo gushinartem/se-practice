@@ -1,0 +1,27 @@
+@startuml
+title Before: starter (baseline fb5bfd8)
+
+skinparam componentStyle rectangle
+
+package "sis-04/app/src" {
+  component [main.tsx] as main
+  component [App.tsx] as App
+  component [index.css] as css
+}
+
+component [react] as react <<library>>
+
+main --> App : imports
+main --> css : imports
+App --> react : imports
+
+note right of App
+  The whole application in one file:
+  - Room type and ROOMS (2 rooms, no capacity or equipment)
+  - toMinutes() and fmt() helpers
+  - check(): the AC1-AC4 decision, inline
+  - the form, the result and the bookings list
+  No tests, no separate rules, data or filter.
+end note
+
+@enduml
