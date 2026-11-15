@@ -14,35 +14,35 @@ schema: 1
 assignment: "sis-04"            # do not edit
 
 student:
-  name:                         # as in the university register
-  student_id:                   # e.g. 00X000000
-  group:                        # your group code, as in the timetable
-  github:                       # username only, not a URL
+  name:         Guchshin Artem                # as in the university register
+  student_id:            24B031011       # e.g. 00X000000
+  group:            Monday16-19            # your group code, as in the timetable
+  github:                 gushinartem      # username only, not a URL
 
 assistant:
-  tool:                         # the assistant you worked with, e.g. ChatGPT (web), Claude.ai, Claude Code
-  model:                        # exactly as in report.md section 1, or: not displayed
+  tool:                   Claude      # the assistant you worked with, e.g. ChatGPT (web), Claude.ai, Claude Code
+  model:               Haiku 5.5 low         # exactly as in report.md section 1, or: not displayed
 
 project:                        # exactly as in report.md section 1
-  start_from:                   # week-08 | week-07 | sis-03 | starter
-  baseline_commit:              # the commit that brought the starting point in unchanged
-  language:                     # ts | js
-  vitest:                       # the version from the "RUN  v..." line, e.g. 3.2.4
+  start_from:         starter          # week-08 | week-07 | sis-03 | starter
+  baseline_commit:        fb5bfd8      # the commit that brought the starting point in unchanged
+  language:         ts            # ts | js
+  vitest:               3.2.7       # the version from the "RUN  v..." line, e.g. 3.2.4
 
 counts:                         # the checker prints most of these under --json "measured"
-  rooms:                        # rooms in ROOMS (src/rooms)
-  tests_original:               # tests in the baseline run, report.md 1.1 (0 if there were none)
-  tests_final:                  # tests in your final test files
-  risks:                        # rows in report.md 3.1
-  exchanges:                    # complete exchanges in report.md section 8
+  rooms:          5              # rooms in ROOMS (src/rooms)
+  tests_original:          0     # tests in the baseline run, report.md 1.1 (0 if there were none)
+  tests_final:           26       # tests in your final test files
+  risks:             5           # rows in report.md 3.1
+  exchanges:         3           # complete exchanges in report.md section 8
 
 checker:                        # from your LAST run of python tests/check_sis.py
-  pass:
-  fail:
-  error:
+  pass: 32
+  fail: 1
+  error: 0
   commit:                       # the commit you ran it at: git rev-parse --short HEAD
                                 # (normally the commit just before you commit this file — that is fine)
-  known_fails: []               # every check still FAIL or ERROR, as in report.md section 9, e.g. [E3]
+  known_fails: [L2]               # every check still FAIL or ERROR, as in report.md section 9, e.g. [E3]
 
 review_findings:
   # Three or more. One line each, and each one names what it is about: an F-rule (F1-F5),
@@ -50,12 +50,13 @@ review_findings:
   # Worthless:        "The refactoring improved the code"
   # Worth everything: "F2: the assistant's filter used equipment.some(), so a room with only a projector
   #                    matched projector + whiteboard; the F2 test caught it"
-  -
-  -
-  -
+  - "F3: the starter's page-level blocked checkbox applied to whichever room was selected, so F3 could not hold per room; I removed it and checkRoom now reads each room's own blocked value (T12)"
+  - "App.tsx: the assistant claimed check() mutates ROOMS and that now goes stale; neither is true in the code, so I dropped both risks from 3.1"
+  - "AC1: check() in App.tsx set an error and still set a result when start was not before end, so both showed together; fixed with an early return and checked on the page"
+  - "AC1: the assistant's plan step 2 would have recorded the current output even where wrong; I wrote booking.test.ts from the requirements instead (T01 to T11)"
 
 honesty:
-  baseline_unchanged:           # yes | no   app/ at the baseline commit is the starting point as it was
-  runs_unedited:                # yes | no   every run in report.md is pasted from a real terminal
-  no_invented_metrics:          # yes | no   every number in section 7 was measured as the row says
-  ai_usage_disclosed:           # yes | no   AI_USAGE.md and section 8 are complete
+  baseline_unchanged:     yes      # yes | no   app/ at the baseline commit is the starting point as it was
+  runs_unedited:            yes    # yes | no   every run in report.md is pasted from a real terminal
+  no_invented_metrics:     yes     # yes | no   every number in section 7 was measured as the row says
+  ai_usage_disclosed:      yes     # yes | no   AI_USAGE.md and section 8 are complete

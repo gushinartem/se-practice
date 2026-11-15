@@ -74,18 +74,18 @@ No test files exist. No src/booking, src/rooms or src/filter modules exist yet.
 I am extending a small React + TypeScript + Vite app (Smart Campus Room Availability Checker) for a university assignment. I want a maintainability analysis and a plan of small steps. Please give NO code yet and do NOT propose a full rewrite.
 
 REPOSITORY MAP (sis-04/app, baseline commit fb5bfd8, no tests yet):
-- index.html: Vite entry page, mounts the app
-- package.json: scripts dev, build, preview, test = "vitest run"; React 18, Vite 5, Vitest 3, TypeScript 5
-- tsconfig.json, vite.config.ts: config
-- src/main.tsx: renders <App /> into #root, imports index.css
-- src/index.css: all styling; one @media (max-width: 480px) rule makes a single column
-- src/App.tsx: the WHOLE application in one file:
-  - type Room and the ROOMS array (2 rooms: a101, b204, with id, name, blocked, bookings; no capacity or equipment)
-  - toMinutes() and fmt() time helpers
-  - App component: state roomId, now, blocked, start, end, endOfDay, result, error
-  - check(): reads the form, validates input and decides Available / Unavailable inline (not a separate function)
-  - renders the form, the result and the room's bookings list
-- No test files. No src/booking, src/rooms or src/filter modules exist yet.
+index.html: Vite entry page, mounts the app
+package.json: scripts dev, build, preview, test = "vitest run"; React 18, Vite 5, Vitest 3, TypeScript 5
+tsconfig.json, vite.config.ts: config
+src/main.tsx: renders <App /> into #root, imports index.css
+src/index.css: all styling; one @media (max-width: 480px) rule makes a single column
+src/App.tsx: the WHOLE application in one file:
+type Room and the ROOMS array (2 rooms: a101, b204, with id, name, blocked, bookings; no capacity or equipment)
+toMinutes() and fmt() time helpers
+App component: state roomId, now, blocked, start, end, endOfDay, result, error
+check(): reads the form, validates input and decides Available / Unavailable inline (not a separate function)
+renders the form, the result and the room's bookings list
+No test files. No src/booking, src/rooms or src/filter modules exist yet.
 
 CURRENT ACCEPTANCE CRITERIA (must be preserved):
 AC1 Reject start >= end and requests in the past.
@@ -218,7 +218,8 @@ PLEASE GIVE ME:
 
 | Before (file / function, what was repeated) | After (where it lives now) |
 | --- | --- |
-| (write here) | (write here) |
+| `src/App.tsx`, `check()`: the "start before end" rule was written twice, as `!(s < e)` for the error message and again as `0 <= s && s < e && e <= 1440` in the availability decision. | One function, `isValidRange(start, end)` in `src/booking.ts`. `canBook` calls it for the decision and `src/App.tsx` calls it for the error message. |
+| `src/App.tsx`, `check()`: the end-of-day limit `1440` was typed twice, in `endOfDay ? 1440 : toMinutes(end)` and in `e <= 1440`. | One constant, `END_OF_DAY` in `src/booking.ts`, used by `isValidRange` and imported by `src/App.tsx`. |
 
 ## 6. Automated tests (Task 4)
 
@@ -301,69 +302,103 @@ E:\Github\se-practice\sis-04\app>npx vitest run
 
 ### 8.1 Exchange 1
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+**Tool and model:** Claude Haiku 5.5 low
+**Date:** 14 November 2026
+**Purpose:** Analysis of the starter code (Task 1): maintainability risks with file and function references, and a plan of small steps, with no code and no full rewrite.
 
 **Prompt:**
 
 ```text
-(paste here)
+The first message of the analysis chat, sent word for word and reproduced unchanged in section 2.2 of this report (repository map, AC1-AC6, F1-F5, target structure, constraints, and the request for risks and a numbered plan).
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+"I haven't opened the repository, so these risks come from your file map and descriptions. Treat each 'evidence' item as something to confirm in the code."
+[…]
+Risk 2: Room data, room state and booking state are coupled (High). Where: App.tsx, the ROOMS constant and the blocked and bookings fields. Check whether check() or any handler writes to ROOMS[...].bookings or blocked, for example with push, splice or a direct assignment.
+Risk 3: Time logic depends on captured "now" and derived values (Medium). now and endOfDay are stored in state, so they are set once and can go stale if the page stays open across midnight or a time change.
+[…]
+Plan step 2: Write characterization tests for AC1-AC5 against the current behavior. Record the current outputs even where you think they are wrong, so you know what you are preserving.
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** The assistant had not seen the code, and said so. Checked against `src/App.tsx`, two of its five risks were wrong. Risk 2 (`check()` mutating `ROOMS`) does not exist: `check()` only reads `room.bookings` in a `for...of` loop, so AC5 already held. Risk 3 (a stale `now`) does not exist either: `now` is a time input the person types, and the scenario uses a fixed current time. It missed the real top risk, the page-level `blocked` checkbox that applies to whichever room is selected, and the "start before end" rule written twice in `check()`. Its plan step 2 told me to freeze the current output, even where wrong, which would have turned the error-and-result bug in `check()` into a test and conflicts with README section 9 (expected values come from the requirements).
+
+**Changes made:** I dropped the two wrong risks, added the `blocked` checkbox and the duplicated rule, and wrote the five risks in 3.1 from my own reading of `App.tsx`. I wrote a new eight-step plan in 3.2 with tests before each extraction, and recorded the modified plan step 2 in 3.3.
+
+**Verified by:** Reading `src/App.tsx` in full (`type src\App.tsx`): `check()` has no write to `ROOMS`; `blocked` is `useState(false)` toggled by a checkbox and tested with `else if (blocked)`; `now` is a `type="time"` input. The baseline run in 1.1 (`No test files found`, 0/0) confirmed there was no safety net. The later runs of `npx vitest run` and `npm run build` after every change confirmed the plan worked.
 
 ### 8.2 Exchange 2
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+**Tool and model:** Claude Haiku 5.5 low
+**Date:** 14 November 2026
+**Purpose:** Get a numbered plan of small safe steps for adding the catalog and the filter and moving the code into the target modules, without changing what AC1-AC5 decide.
 
 **Prompt:**
 
 ```text
-(paste here)
+I want a maintainability analysis and a plan of small steps. Please give NO code yet and do NOT propose a full rewrite.
+[…]
+A numbered plan of small safe steps, smallest first, that adds the catalog and the filter and moves the code into the target modules without changing what AC1-AC5 decide.
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+Each step should end with npm test and npm run build passing before you continue.
+Step 2: Write characterization tests for AC1-AC5 against the current behavior. Do not change app code in this step.
+Step 6: Create canBook({ start, end, now, blocked, bookings }) in src/booking.ts. Copy the logic from check() into this pure function, with the same inputs and outputs.
+Step 9: Add checkRoom(rooms, roomId, { start, end, now }). It finds the chosen room and calls canBook with that room's bookings.
+Step 11: Create filterRooms(rooms, { attendees, equipment }) in src/filter.ts. Implement F1 and F2 as a pure function. Test each rule and their combination.
+Step 14: Make a successful check clear error, and a validation failure clear result. Consider replacing the two states with one status value.
+[…]
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** The plan had 17 steps, which is long for a small app. Step 3 tested for mutation of the data, but `check()` never writes to `ROOMS`, so that step tested a problem that does not exist. Steps 4 and 5 moved constants and helpers around before any rule had a test. Step 11 created `filterRooms` and only then said to test it, and step 6 created `canBook` before its tests, but README section 7 says to write the test, see it fail, then add the code. It also placed the fix for the global `blocked` checkbox, the real top risk, nowhere: step 12 enforces F3 inside `checkRoom`, but the page-level checkbox would still have overridden it. Step 14 suggested merging `error` and `result` into one status value, which is a bigger change than the bug needs.
+
+**Changes made:** I kept the order of the idea (rules first, then data, then `checkRoom`, then the filter, then the page) and cut it to an 8-step plan in 3.2. In each step the tests come first. I added a step that removes the page-level `blocked` checkbox and reads each room's own value. I dropped the mutation test and the constants step, and chose the smaller fix for the error/result conflict: an early `return` plus one `clearFeedback()`. Duplicate removal and the component split moved to the end, once the tests could protect them.
+
+**Verified by:** The red runs of `npx vitest run` before each new module: `Cannot find module './booking'` for `booking.test.ts`, `checkRoom is not a function` for the 5 `checkRoom` tests, and `Cannot find module './filter'` for `filter.test.ts`. Then the green runs after each addition: 11/11, 16/16 and 26/26, each followed by a successful `npm run build`.
 
 ### 8.3 Exchange 3
 
-**Tool and model:** (write here)
-**Date:** (write here)
-**Purpose:** (write here)
+### 8.3 Exchange 3
+
+**Tool and model:** Claude Haiku 5.5 low
+**Date:** 14 November 2026
+**Purpose:** Implementation with tests first (Task 4): the F1, F2, F4, B5, B6 and INT tests for `filterRooms`, then `src/filter.ts`.
 
 **Prompt:**
 
 ```text
-(paste here)
+1. Main workflow: STRICT ONE-ACTION-AT-A-TIME MODE
+[…]
+When I say step-by-step, I mean ONE SINGLE ACTION OR TASK PER RESPONSE, NOT a group of steps, a section containing multiple subtasks, or a complete workflow.
+[…]
+Your first response must contain ONLY Task 1.
+After I complete Task 1 and send you the results, you can provide Task 2.
 ```
 
 **Output used:**
 
 ```text
-(paste here)
+test('T18 B5 F1: capacity exactly equal to the attendees (12) is included', () => {
+  expect(ids(filterRooms(CATALOG, { attendees: 12, equipment: [] }))).toContain('r2');
+});
+test('T19 B6 F1: capacity one below the attendees (8 seats for 9) is excluded', () => { […] });
+test('T25 INT: filterRooms then checkRoom on each returned room', () => { […] });
+[…]
+export function filterRooms(rooms: Room[], criteria: { attendees: number; equipment: string[] }): Room[] {
+  return rooms.filter(room => room.capacity >= criteria.attendees && criteria.equipment.every(item => room.equipment.includes(item)));
+}
 ```
 
-**Problems found:** (write here)
-**Changes made:** (write here)
-**Verified by:** (write here)
+**Problems found:** I found no wrong expected value, but I recomputed each one by hand from the four rooms in the test file (8, 12, 20 and 40 seats) before accepting it, because section 9 of the README says expected values come from F1 and F2, not from the code. Two things needed a decision. The plan in 3.2 put the INT test in step 4, but INT needs `filterRooms`, which did not exist yet, so the assistant moved INT to the filter step and the deviation had to be written down here. The tests also had to assume two things the requirements leave open: a blocked room stays in the `filterRooms` result (F3 is enforced later by `checkRoom`), and an empty equipment list keeps every room with enough seats. I did not write a test for a request that starts exactly at the current time, because AC1 does not say whether that counts as "in the past".
+
+**Changes made:** I created `src/filter.test.ts` with tests T17 to T26, and `src/filter.ts` with `filterRooms`. I moved the INT test from plan step 4 to this step, kept the catalog inside the test file so the demo data cannot change a result, and recorded the blocked-room decision in 5.2.
+
+**Verified by:** The red run of `npx vitest run` before the code existed (`Cannot find module './filter'`, 16 tests still passing), then the green run after it: `Tests  26 passed (26)`. Then `npm run build` (34 modules once the page imported the filter) and the F1, F2 and F4 screenshots taken from the running page.
 
 ## 9. Checker results and known fails
 
@@ -372,7 +407,7 @@ E:\Github\se-practice\sis-04\app>npx vitest run
 
 | Check | Why it still fails |
 | --- | --- |
-| (write here) | (write here) |
+| L2 | Section 2.2 holds the context message exactly as I sent it, with the repository map, AC1–AC6, F1–F5 and the constraints (well over 40 words). The checker's placeholder filter discards any code block that contains the literal text `High / Medium / Low`, which is the wording of my request for risk priorities at the end of the message. It therefore reads 2.2 as empty, although the message is complete. I did not edit the message to satisfy the checker, because the README requires it unedited. |
 
 ## 10. AI reflection (Task 6)
 
@@ -381,4 +416,12 @@ E:\Github\se-practice\sis-04\app>npx vitest run
      incorrect? What did you personally verify? How did tests influence your engineering
      decisions? What would you improve next? -->
 
-(write here)
+I gave the assistant a context message with a map of the starter files, AC1–AC6, F1–F5, the target modules and the constraints, and asked for risks and a plan, with no code. Because it had not seen the code, its answer was generic in places.
+
+Some suggestions were useful: the order of rules first, then data, then checkRoom, then the filter. Others were wrong. It claimed check() might mutate ROOMS, but check() only reads room.bookings. It said now could go stale, but now is a typed input. It missed the real top risk, the global "Room blocked" checkbox, which made F3 impossible per room. It also wanted tests that record the current output, even where wrong, which I modified because README section 9 says expected values come from the requirements.
+
+I personally read App.tsx to confirm every risk, recomputed the expected values of each filter test by hand, ran npx vitest run and npm run build after every change, and took all five screenshots from the running page. My first narrow screenshot was clipped and one switch screenshot had PM instead of AM, so I retook both.
+
+Tests shaped the order of work. I watched each suite fail first, then pass: 11, 16, 26. They let me extract canBook, remove the checkbox and split the page into components with no fear of breaking AC1–AC5.
+
+Next I would add rendered-page tests with Testing Library, because F4, F5 and the cleared result are only proven by screenshots. I would also add a test for a request starting exactly at the current time, which AC1 leaves unclear.

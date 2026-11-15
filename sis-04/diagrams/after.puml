@@ -24,4 +24,35 @@ package "src (UI, no rules)" {
 package "tests (Vitest)" {
   component [booking.test.ts] as bookingTest
   component [checkRoom.test.ts] as checkRoomTest
-  component
+  component [filter.test.ts] as filterTest
+}
+
+component [react] as react <<library>>
+
+main --> App : imports
+main --> css : imports
+App --> react : imports
+App --> booking : imports
+App --> filter : imports
+App --> rooms : imports
+App --> time : imports
+App --> FilterPanel : imports
+App --> RoomList : imports
+App --> TimeForm : imports
+App --> ResultPanel : imports
+App --> BookingsList : imports
+
+booking --> rooms : imports (Room type)
+filter --> rooms : imports (Room type)
+RoomList --> rooms : imports (Room type)
+BookingsList --> rooms : imports (Room type)
+BookingsList --> time : imports
+
+bookingTest --> booking : imports
+checkRoomTest --> booking : imports
+checkRoomTest --> rooms : imports (Room type)
+filterTest --> filter : imports
+filterTest --> booking : imports
+filterTest --> rooms : imports (Room type)
+
+@enduml
