@@ -493,7 +493,7 @@ index b786d88..418465f 100644
 
 ### 7.1 The regression test fails before the mitigation
 
-The risk it covers: **R?**. The real run, with the new test failing:
+The risk it covers: **R6**. The real run, with the new test failing:
 
 ````text
  RUN  v3.2.7 E:/Github/se-practice/week-10/app
@@ -572,28 +572,93 @@ AssertionError: expected NaN to be 1440 // Object.is equality
 
 ### 8.1 The first mitigation
 
-**Risk:** R?
+**Risk:** R6
 
 **If this is the refactor** — the prompt you sent (README Part 8), then the problem → pattern → benefit
 line. Otherwise leave both empty.
 
 ```text
-(the refactor prompt, if this is the refactor)
+Refactor the availability logic into a small, pure module, keeping the existing function inputs, outputs, and UI behavior. Use a pattern only if the identified design problem justifies it. Do not add new features or dependencies. Show the files you plan to edit before making changes.
 ```
 
-**Problem → pattern → benefit:**
+**Problem → pattern → benefit:** The problem was that `parseHHMM` and `fmt` were mixed into `availability.ts`, and `parseHHMM` returned `NaN` for `24:00`, so a booking that ends at midnight could not be entered (R6). I used no pattern, only an extracted pure module, `src/utils/time.ts`, because there is one data shape and one policy; it bought a small isolated parser where the `24:00` fix sits in one place, and the regression test `R6 AC1` went from failing to passing with the suite at 23 of 23.
 
-**What I rejected from the agent's patch, and why:**
+**What I rejected from the agent's patch, and why:** The agent's first plan targeted a different problem: the duplicated rules in `canBook` and `checkAvailability` (R7). I rejected its plan to turn `canBook` into a wrapper and to rewire `App.tsx` to one call, because that changes the function all 22 existing tests cover and the UI code that no test covers, and it does not fix R6. I rejected its optional extra tests for the reasons list, which I did not ask for. I then sent a narrower follow-up (the problem, `time.ts`, `parseHHMM` and `fmt` only, no change to `canBook`, `checkAvailability`, `App.tsx`, the components or any test) and approved that patch after reading every line. I did not apply its diff line numbers; I applied the change by hand.
 
 The diff I approved (`git diff`):
 
 ```text
-(paste here)
+diff --git a/week-10/app/src/utils/availability.ts b/week-10/app/src/utils/availability.ts
+index fcbbca6..b11b5a6 100644
+--- a/week-10/app/src/utils/availability.ts
++++ b/week-10/app/src/utils/availability.ts
+@@ -1,5 +1,7 @@
+ import type { Booking, CheckResult, Interval, Room } from "../types";
++import { fmt } from "./time";
+
++export { fmt, parseHHMM } from "./time";
+ export const MINUTES_PER_DAY = 1440;
+ export const MAX_BOOKING_MINUTES = 120;
+
+@@ -70,22 +72,3 @@ export function checkAvailability(
+   const verdict = reasons.length === 0 ? "available" : "unavailable";
+   return { verdict, reasons };
+ }
+-
+-/** Format minutes-since-midnight as HH:MM. */
+-export function fmt(min: number): string {
+-  if (Number.isNaN(min)) return "--:--";
+-  const clamped = Math.max(0, Math.min(MINUTES_PER_DAY, Math.round(min)));
+-  const h = Math.floor(clamped / 60);
+-  const m = clamped % 60;
+-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+-}
+-
+-/** Parse an HH:MM string into minutes since midnight, or NaN. */
+-export function parseHHMM(value: string): number {
+-  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
+-  if (!match) return NaN;
+-  const h = Number(match[1]);
+-  const m = Number(match[2]);
+-  if (h < 0 || h > 23 || m < 0 || m > 59) return NaN;
+-  return h * 60 + m;
+-}
+diff --git a/week-10/app/src/utils/time.ts b/week-10/app/src/utils/time.ts
+new file mode 100644
+index 0000000..8612b2b
+--- /dev/null
++++ b/week-10/app/src/utils/time.ts
+@@ -0,0 +1,25 @@
++const DAY_END_MINUTES = 1440;
++
++/** Format minutes-since-midnight as HH:MM. */
++export function fmt(min: number): string {
++  if (Number.isNaN(min)) return "--:--";
++  const clamped = Math.max(0, Math.min(DAY_END_MINUTES, Math.round(min)));
++  const h = Math.floor(clamped / 60);
++  const m = clamped % 60;
++  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
++}
++
++/**
++ * Parse an HH:MM string into minutes since midnight, or NaN.
++ * "24:00" is accepted and means the end of the day (1440).
++ * Every other hour above 23 is rejected.
++ */
++export function parseHHMM(value: string): number {
++  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
++  if (!match) return NaN;
++  const h = Number(match[1]);
++  const m = Number(match[2]);
++  if (h === 24 && m === 0) return DAY_END_MINUTES;
++  if (h < 0 || h > 23 || m < 0 || m > 59) return NaN;
++  return h * 60 + m;
++}
 ```
 
 ### 8.2 The second mitigation
 
-**Risk:** R?
+**Risk:** R1
 
 **If this is the refactor** — the prompt you sent (README Part 8), then the problem → pattern → benefit
 line. Otherwise leave both empty.
@@ -604,20 +669,64 @@ line. Otherwise leave both empty.
 
 **Problem → pattern → benefit:**
 
-**What I rejected from the agent's patch, and why:**
+**What I rejected from the agent's patch, and why:** I rejected the agent's changes to the headings (a new `## Scope and constraints` section and `## You may` renamed to `## Permissions`), because the checker requires the same headings as `provided/AGENTS.md`. I rejected its `[DECISION NEEDED]` and `[DEFINITION NEEDED]` placeholders for AC4 and AC6, because the README contract already defines both. I rejected its path changes (`booking.ts`, `booking_test.ts` at the root), because the repo has `src/booking.ts` and `src/booking.test.ts`; they came from files attached flat to a chat. I rejected narrowing the permissions on lines 31-32 and adding the `typecheck` command, because neither is one of the six constraints and the patch is limited to 14 changed lines. For R1 itself, I replaced line 38 (`npx netlify deploy --prod`) with a rule that agents never deploy and a human deploys after review.
 
 The diff I approved (`git diff`):
 
 ```text
-(paste here)
+diff --git a/week-10/app/AGENTS.md b/week-10/app/AGENTS.md
+index b786d88..418465f 100644
+--- a/week-10/app/AGENTS.md
++++ b/week-10/app/AGENTS.md
+@@ -9,30 +9,33 @@ A React + TypeScript page (Vite) that tells a student whether a campus room is f
+ requested time. The booking rule lives in `src/booking.ts` (`canBook`); the page is `src/App.tsx`;
+ the tests are in `src/booking.test.ts`.
+
+-For realism, use real room names and the real timetable from the KBTU portal.
++Use one fictional room with fictional bookings. Do not use real room names or real timetables.
+
+ ## Acceptance contract
+
+ - AC1 Reject start ≥ end and requests in the past.
+ - AC2 Enforce the maximum allowed duration (120 minutes).
+ - AC3 Reject a blocked room.
+-- AC4 Reject overlaps. A request that touches a booking at an endpoint also counts as an overlap.
++- AC4 Reject overlaps; allow bookings that only touch at endpoints.
+ - AC5 Return Available / Unavailable without changing booking data.
++- AC6 Preserve clear UI feedback on desktop and mobile.
+
+ ## Commands
+
+ - Install: `npm install`
+ - Dev server: `npm run dev`
+-- Tests: `npm run test:unit`
++- Tests: `npm test`
+ - Build: `npm run build`
+
+ ## You may
+
+ - Edit any file in the project.
+ - Add packages when a task needs them.
+-- If bookings need to persist, add a small Supabase table and a login page.
++- Keep booking data in memory. Never add a login or a database.
+
+ ## Before you finish
+
+ - Make sure the page still loads.
+-- When the build passes, publish a preview with `npx netlify deploy --prod` so the team can see it.
++- Run `npm test` and report the real result before saying the work is done.
++- Never deploy or publish to any external service. A human deploys after review.
++- Never commit secrets: no keys, tokens, passwords or `.env` files.
 ```
 
 ### 8.3 The residual risk
 
 | ID | L before | I before | Score before | L after | I after | Score after | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | |
-| | | | | | | | |
+| R6 | 3 | 2 | 6 | 1 | 2 | 2 | Commit `b3f8a30`: `parseHHMM` in `src/utils/time.ts` now returns 1440 for `24:00`. The regression test `R6 AC1` went from failing (`expected NaN to be 1440`) to passing, 23 of 23 tests pass, build and lint pass, and in the page 22:00-24:00 shows Available. Impact stays 2 because the "Campus now" box also parses `24:00`, which makes every slot count as in the past; nothing is saved. |
+| R1 | 3 | 3 | 9 | 1 | 3 | 3 | `git diff app/AGENTS.md` (committed as `bc813ed`): the deploy line is replaced by "Never deploy or publish to any external service. A human deploys after review", and `check_audit.py` reports C5 PASS (deployment forbidden). Impact stays 3 because a human could still deploy an unreviewed build by hand, or another agent could ignore the file. |
+| R2 | 2 | 3 | 6 | 1 | 3 | 3 | Same patch, line 19: "allow bookings that only touch at endpoints". C3 PASS (AC4 allows touching); tests T01, T08 and B02 still pass. Impact stays 3 because an agent could still ignore the file and change `canBook`. |
+| R3 | 3 | 2 | 6 | 1 | 2 | 2 | Same patch, line 26: `npm test`. A3 PASS (every command exists), and `npm test` passed 22 of 22 before the change. |
 
 ### 8.4 The final run
 
