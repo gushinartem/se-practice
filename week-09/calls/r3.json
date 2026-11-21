@@ -1,0 +1,1 @@
+{"name": "check_room", "description": "Checks whether a room can be booked for a requested time slot.", "arguments": {"message": "Could you tell me the exact start time you’d like, and the current time so I can check availability?"}}
