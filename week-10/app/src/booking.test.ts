@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { canBook } from "./booking";
-
+import { parseHHMM } from "./utils/availability";
 // Fresh input on every call. Default fixture: now = 540 (09:00),
 // blocked = false, one booking 600-660 (10:00-11:00).
 function run(
@@ -152,5 +152,13 @@ describe("AC5: the decision does not change the booking data", () => {
 
     expect(result).toBe(false);
     expect(bookings).toEqual(before);
+  });
+});
+
+describe("R6: the UI can reach the end of the day", () => {
+  test("R6 AC1: 24:00 is parsed as the end of the day (1440) and the slot 1320-1440 is accepted", () => {
+    const end = parseHHMM("24:00");
+    expect(end).toBe(1440);
+    expect(run(1320, end)).toBe(true);
   });
 });
