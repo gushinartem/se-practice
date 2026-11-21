@@ -733,7 +733,37 @@ index b786d88..418465f 100644
 The real output of the **full** suite after both mitigations. Every test must pass.
 
 ```text
-(paste here)
+ RUN  v3.2.7 E:/Github/se-practice/week-10/app
+
+ ✓ src/booking.test.ts (23 tests) 6ms
+   ✓ AC1: interval bounds and start after now > T02 AC1: starts now (540-570) is rejected 1ms
+   ✓ AC1: interval bounds and start after now > T03 AC1: zero duration (720-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T04 AC1: reversed interval (750-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T05 AC1: past the end of the day (1380-1441) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > X1 AC1: first minute after now, touching the booking (541-600) is accepted 0ms
+   ✓ AC1: interval bounds and start after now > X2 AC1: ends exactly at the end of the day (1320-1440) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T06 AC2: exactly 120 minutes (720-840) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T07 AC2: 121 minutes (720-841) is rejected 0ms
+   ✓ AC3: blocked room > T13 AC3: blocked room (660-720) is rejected 0ms
+   ✓ AC3: blocked room > B04 AC3: blocked room with no bookings (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T08 AC4: touching before the booking (570-600) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T09 AC4: partial overlap (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T10 AC4: interval contains the booking (570-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T11 AC4: interval inside the booking (615-645) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T12 AC4: identical interval (600-660) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T14 AC4: no bookings (630-690) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B01 AC4: overlaps only the second of two bookings (740-800) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B03 AC4: overlaps the booking by one minute (659-661) is rejected 0ms
+   ✓ AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged 1ms
+   ✓ AC5: the decision does not change the booking data > B05 AC5: an Unavailable request also leaves the bookings unchanged 0ms
+   ✓ R6: the UI can reach the end of the day > R6 AC1: 24:00 is parsed as the end of the day (1440) and the slot 1320-1440 is accepted 0ms
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  21:35:55
+   Duration  934ms (transform 68ms, setup 0ms, collect 81ms, tests 6ms, environment 0ms, prepare 124ms)
 ```
 
 ---
@@ -747,12 +777,12 @@ its files and its commands.
 
 | Rule | What I require |
 | --- | --- |
-| Isolation | |
-| Permitted files | |
-| Commands | |
-| Prohibited actions | |
-| Required evidence | |
-| Before merging or deploying | |
+| Isolation | The agent works only on its own branch (for example `agent/<task>`) cut from `week-10`, or in a separate git worktree, never on `main` or `week-10` directly. It has no credentials, no tokens, no `.env` and no network access beyond `npm install`. Nothing it does is pushed to a shared remote without my review. |
+| Permitted files | Only `app/src/booking.ts`, `app/src/utils/time.ts`, `app/src/utils/availability.ts` and `app/src/booking.test.ts`, and only for the task I named. New tests may be added to `booking.test.ts`, but no existing assertion may be weakened, skipped or deleted. |
+| Commands | Only `npm install`, `npm test`, `npm run build` and `npm run lint` in `app/`. It runs `npm test` before and after every change and does not report a result it did not get from a real run. `npm run test:unit` does not exist and must not be used. |
+| Prohibited actions | No deploy or publish of any kind (no `netlify`, no `--prod`). No login, no database, no Supabase code or table, and no new dependency or edit to `package.json` or `package-lock.json`. No real room names, timetables or personal data. No secrets or `.env` committed. No edits to `app/AGENTS.md`, `provided/AGENTS.md`, `tests/*.py`, `submission.yml`, `evidence/` or `lab-report.md`. No merge, no force-push. |
+| Required evidence | The `git diff` of every changed file, the list of changed files, the real output of `npm test` (all tests passing, and at least the current 23), the build result of `npm run build`, the exit code of `npm run lint`, and a note listing every check it did not run. It also states which risk IDs from the register (for example R6 or R7) the change touches and whether their L, I and score change. |
+| Before merging or deploying | I read the whole diff, rerun `npm test`, `npm run build` and `npm run lint` myself, and run `python tests/check_audit.py` from `week-10/`. Merging needs my explicit approval, and the PR stays open until I decide. Only a human deploys, after that review; the agent never does. |
 
 ### 9.2 Optional — the deck's checklist prompt (not graded)
 
@@ -764,13 +794,13 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
 
 | Check | Why it stays |
 | --- | --- |
-| | |
+| none | The last run of `python tests/check_audit.py` gave 31 PASS, 0 FAIL, 0 ERROR. |
 
 ---
 
 ## 10. Release decision and conclusion
 
-**Decision:** GO / CONDITIONAL / NO-GO
+**Decision:** CONDITIONAL
 
 <!-- Keep one word above. GO is not allowed while any confirmed risk still scores 6 or more.
      Then 80-150 words, in your own words, without the assistant: why this decision, from the
@@ -782,3 +812,4 @@ Use the same IDs as `known_fails` in `submission.yml`. Write `none` if the run i
      but no test covers App.tsx, so a regression there would be invisible." -->
 
 <!-- Write your conclusion below this line -->
+CONDITIONAL. I can't say GO, because R8 (no tests for checkAvailability, 3 x 2 = 6) is confirmed and still open, and R7 (canBook and checkAvailability repeat the same rules, 2 x 2 = 4) is open too. Both are owned by me and controlled by the 23-test suite, which passes. R6 (parseHHMM rejected 24:00, 6) is reduced by the time module and its regression test, now 1 x 2 = 2, and R1 (the deploy line in AGENTS.md, 9) is reduced by the patch, now 1 x 3 = 3. The UI was checked by hand at 1400 px and 390 px, but no test covers App.tsx, and I did not run typecheck or coverage, so a regression there could go unnoticed.
