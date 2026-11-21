@@ -1,5 +1,7 @@
 import type { Booking, CheckResult, Interval, Room } from "../types";
+import { fmt } from "./time";
 
+export { fmt, parseHHMM } from "./time";
 export const MINUTES_PER_DAY = 1440;
 export const MAX_BOOKING_MINUTES = 120;
 
@@ -69,23 +71,4 @@ export function checkAvailability(
 
   const verdict = reasons.length === 0 ? "available" : "unavailable";
   return { verdict, reasons };
-}
-
-/** Format minutes-since-midnight as HH:MM. */
-export function fmt(min: number): string {
-  if (Number.isNaN(min)) return "--:--";
-  const clamped = Math.max(0, Math.min(MINUTES_PER_DAY, Math.round(min)));
-  const h = Math.floor(clamped / 60);
-  const m = clamped % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
-/** Parse an HH:MM string into minutes since midnight, or NaN. */
-export function parseHHMM(value: string): number {
-  const match = value.trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return NaN;
-  const h = Number(match[1]);
-  const m = Number(match[2]);
-  if (h < 0 || h > 23 || m < 0 || m > 59) return NaN;
-  return h * 60 + m;
 }
