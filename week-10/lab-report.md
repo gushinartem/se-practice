@@ -495,21 +495,76 @@ index b786d88..418465f 100644
 
 The risk it covers: **R?**. The real run, with the new test failing:
 
-```text
-(paste here)
-```
+````text
+ RUN  v3.2.7 E:/Github/se-practice/week-10/app
+
+ ❯ src/booking.test.ts (23 tests | 1 failed) 15ms
+   ✓ AC1: interval bounds and start after now > T02 AC1: starts now (540-570) is rejected 2ms
+   ✓ AC1: interval bounds and start after now > T03 AC1: zero duration (720-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T04 AC1: reversed interval (750-720) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > T05 AC1: past the end of the day (1380-1441) is rejected 0ms
+   ✓ AC1: interval bounds and start after now > X1 AC1: first minute after now, touching the booking (541-600) is accepted 0ms
+   ✓ AC1: interval bounds and start after now > X2 AC1: ends exactly at the end of the day (1320-1440) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T06 AC2: exactly 120 minutes (720-840) is accepted 0ms
+   ✓ AC2: maximum 120 minutes > T07 AC2: 121 minutes (720-841) is rejected 0ms
+   ✓ AC3: blocked room > T13 AC3: blocked room (660-720) is rejected 0ms
+   ✓ AC3: blocked room > B04 AC3: blocked room with no bookings (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T01 AC4: touching after the booking (660-720) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T08 AC4: touching before the booking (570-600) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > T09 AC4: partial overlap (630-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T10 AC4: interval contains the booking (570-690) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T11 AC4: interval inside the booking (615-645) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T12 AC4: identical interval (600-660) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > T14 AC4: no bookings (630-690) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B01 AC4: overlaps only the second of two bookings (740-800) is rejected 0ms
+   ✓ AC4: overlap, touching allowed > B02 AC4: fits exactly between two bookings, touching both (660-700) is accepted 0ms
+   ✓ AC4: overlap, touching allowed > B03 AC4: overlaps the booking by one minute (659-661) is rejected 0ms
+   ✓ AC5: the decision does not change the booking data > AC5: an Available request leaves the bookings unchanged 1ms
+   ✓ AC5: the decision does not change the booking data > B05 AC5: an Unavailable request also leaves the bookings unchanged 0ms
+   × R6: the UI can reach the end of the day > R6 AC1: 24:00 is parsed as the end of the day (1440) and the slot 1320-1440 is accepted 8ms
+     → expected NaN to be 1440 // Object.is equality
+
+ FAIL  src/booking.test.ts > R6: the UI can reach the end of the day > R6 AC1: 24:00 is parsed as the end of the day (1440) and the slot 1320-1440 is accepted
+AssertionError: expected NaN to be 1440 // Object.is equality
+
+- Expected
++ Received
+
+- 1440
++ NaN
+
+ ❯ src/booking.test.ts:161:17
+    159|   test("R6 AC1: 24:00 is parsed as the end of the day (1440) and the slot 1320-1440 is accepted", () => {
+    160|     const end = parseHHMM("24:00");
+    161|     expect(end).toBe(1440);
+       |                 ^
+    162|     expect(run(1320, end)).toBe(true);
+   163|   });
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 passed (23)
+   Start at  21:09:11
+   Duration  936ms (transform 63ms, setup 0ms, collect 71ms, tests 15ms, environment 0ms, prepare 549ms)
+````
 
 ### 7.2 The manual UI check
 
 | View | Width | What I checked | Result | Screenshot |
 | --- | --- | --- | --- | --- |
-| Desktop | | | | `evidence/ui-desktop.png` |
-| Mobile | | | | `evidence/ui-mobile.png` |
+| Desktop | 1400 px | Campus now 08:00, Ada Lovelace Hall. Slot 10:00-11:00 (touches the 09:00-10:00 booking at an endpoint), then slot 09:30-10:30 (overlaps it). Looked for cut-off or overlapping elements and for a readable verdict | 10:00-11:00 showed Available, 09:30-10:30 showed Unavailable. Everything readable, nothing cut off or overlapping | `evidence/ui-desktop.png` |
+| Mobile | 390 px | Campus now 08:00, Ada Lovelace Hall, slot 09:30-10:30. Scrolled the page; looked for cut-off text, overlapping buttons, sideways scrolling and a hard-to-find verdict | 09:30-10:30 showed Unavailable. Everything readable on a phone width, nothing cut off or overlapping | `evidence/ui-mobile.png` |
 
 ### 7.3 Tests and checks I did not run
 
 <!-- Name each one and why. "None" only if it is true. -->
--
+- `npm run typecheck` (`tsc --noEmit -p tsconfig.app.json`): not run in this lab. Only the tests, build and lint were run, so type correctness is unchecked.
+- Coverage (`vitest run --coverage`): not run, so which lines of `availability.ts` and the components are exercised is unknown. Only `canBook` and the new `parseHHMM` test are known to be covered.
+- No automated test covers `App.tsx` or any component, so the UI was checked by hand only, at two widths.
+- Typing `24:00` into the page by hand (R6): not tried in the UI. R6 rests on the code of `parseHHMM` and the failing regression test.
+- Setting "Campus now" to `00:00` to confirm that a past slot shows Available (R9): not tried in the UI. R9 rests on the code of `App.tsx` lines 89-91.
+- Whether the "Overlaps" reason text shows its dash correctly in the browser: not checked. The garbled characters seen in the terminal may come from the console, not from the page.
+- Screen-reader and keyboard checks, and the AI's `aria-live` claim: not run.
+- `npm audit` details: only the count from `npm install` was seen (25 vulnerabilities); none was reviewed, and none was fixed.
 
 ---
 
