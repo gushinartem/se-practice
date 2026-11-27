@@ -1,0 +1,58 @@
+@startuml
+title After: final code
+
+skinparam componentStyle rectangle
+
+package "src (rules and data, no UI)" {
+  component [rooms.ts\n(Room type, ROOMS: data only)] as rooms
+  component [booking.ts\n(canBook, checkRoom, isValidRange)] as booking
+  component [filter.ts\n(filterRooms: F1, F2)] as filter
+  component [time.ts\n(toMinutes, fmt)] as time
+}
+
+package "src (UI, no rules)" {
+  component [main.tsx] as main
+  component [App.tsx\n(state and calls to the rules)] as App
+  component [FilterPanel.tsx] as FilterPanel
+  component [RoomList.tsx] as RoomList
+  component [TimeForm.tsx] as TimeForm
+  component [ResultPanel.tsx] as ResultPanel
+  component [BookingsList.tsx] as BookingsList
+  component [index.css] as css
+}
+
+package "tests (Vitest)" {
+  component [booking.test.ts] as bookingTest
+  component [checkRoom.test.ts] as checkRoomTest
+  component [filter.test.ts] as filterTest
+}
+
+component [react] as react <<library>>
+
+main --> App : imports
+main --> css : imports
+App --> react : imports
+App --> booking : imports
+App --> filter : imports
+App --> rooms : imports
+App --> time : imports
+App --> FilterPanel : imports
+App --> RoomList : imports
+App --> TimeForm : imports
+App --> ResultPanel : imports
+App --> BookingsList : imports
+
+booking --> rooms : imports (Room type)
+filter --> rooms : imports (Room type)
+RoomList --> rooms : imports (Room type)
+BookingsList --> rooms : imports (Room type)
+BookingsList --> time : imports
+
+bookingTest --> booking : imports
+checkRoomTest --> booking : imports
+checkRoomTest --> rooms : imports (Room type)
+filterTest --> filter : imports
+filterTest --> booking : imports
+filterTest --> rooms : imports (Room type)
+
+@enduml
